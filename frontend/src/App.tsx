@@ -9,6 +9,7 @@ import { TeamPanel } from "./components/TeamPanel";
 import { ReviewDesk } from "./components/ReviewDesk";
 import { Classifier } from "./components/Classifier";
 import { EmptyState, LoadingState } from "./components/WorkspaceState";
+import { Footer } from "./components/Footer";
 import "./teams.css";
 
 function HotDogApp() {
@@ -131,6 +132,7 @@ function HotDogApp() {
           )}
           {tab === "review" && reviewer && (
             <ReviewDesk
+              key={`${teamState?.team?.id}:${teamState?.team?.role}`}
               revision={activityRevision}
               onDecision={refreshActivity}
             />
@@ -149,10 +151,7 @@ function HotDogApp() {
           )}
         </>
       )}
-      <footer>
-        <span>HDN / Visual classification & human oversight</span>
-        <span>OPERATIONAL WORKSPACE / 2026</span>
-      </footer>
+      <Footer />
     </main>
   );
 }

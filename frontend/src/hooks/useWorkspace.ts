@@ -101,9 +101,19 @@ export function useWorkspace() {
 
   useEffect(() => {
     if (!user) return;
-    const refresh = () => setTeamRevision((value) => value + 1);
+    const refresh = () => {
+      if (document.visibilityState === "visible") {
+        setTeamRevision((value) => value + 1);
+      }
+    };
+    const interval = window.setInterval(refresh, 30_000);
     window.addEventListener("focus", refresh);
-    return () => window.removeEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
   }, [user?.id]);
 
   function teamChanged(state: TeamState) {

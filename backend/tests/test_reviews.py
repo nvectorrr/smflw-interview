@@ -37,7 +37,9 @@ def test_v1_integrity_and_human_staging_preserve_original():
     assert human.schema_version == 2
     assert human.original_certificate_id == original.certificate_id
     assert human.is_hot_dog is False
-    assert "owner_id" not in certificates.public_record(human)
+    public = certificates.public_record(human)
+    assert not {"owner_id", "reviewer_id", "reviewer_email"} & public.keys()
+    assert public["reviewer_name"] == "Authorized team supervisor"
     validate_record_integrity(human)
 
 

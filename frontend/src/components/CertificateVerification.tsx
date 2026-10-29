@@ -1,3 +1,4 @@
+import { Footer } from "./Footer";
 import { ThemeToggle } from "./ThemeToggle";
 import { Spinner } from "./WorkspaceState";
 import { useEffect, useRef, useState } from "react";
@@ -355,10 +356,7 @@ export function CertificateVerification({
           Check a new photo ↗
         </a>
       </section>
-      <footer>
-        <span>Serious technology. A very unserious question.</span>
-        <span>HOT DOG OR NOT · 2026</span>
-      </footer>
+      <Footer />
     </main>
   );
 }

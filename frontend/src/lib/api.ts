@@ -224,6 +224,7 @@ export type HumanReview = {
   certificate_id: string | null;
   reviewed_at: string | null;
   reviewer_name: string | null;
+  reviewer_id: string | null;
 };
 export type ReviewItem = {
   id: string;
@@ -276,8 +277,8 @@ export const escalateCheck = (checkId: string) =>
     method: "POST",
     signal: AbortSignal.timeout(20_000),
   });
-export const getReviews = (signal?: AbortSignal) =>
-  request<ReviewPage>("/reviews?limit=20&offset=0", {
+export const getReviews = (signal?: AbortSignal, offset = 0) =>
+  request<ReviewPage>(`/reviews?limit=20&offset=${offset}`, {
     signal: signal ?? AbortSignal.timeout(20_000),
   });
 export const decideReview = (reviewId: string, isHotDog: boolean) =>

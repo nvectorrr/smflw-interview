@@ -9,14 +9,18 @@ export function ReviewOutcome({ review }: { review: HumanReview }) {
     <div className={`human-review ${review.status}`}>
       <span className="review-label">HUMAN REVIEW</span>
       {review.status === "pending" ? (
-        <p role="status">Requested · waiting for a team reviewer.</p>
+        <p role="status">
+          Requested · in the shared team queue. Another supervisor will review
+          it.
+        </p>
       ) : (
         <>
           <strong>
             Final human verdict: {review.is_hot_dog ? "Hot dog" : "Not hot dog"}
           </strong>
           <p>
-            {review.reviewer_name || "Team reviewer"}
+            Verified by{" "}
+            <strong>{review.reviewer_name || "Team reviewer"}</strong>
             {review.reviewed_at && (
               <>
                 {" "}
@@ -28,6 +32,17 @@ export function ReviewOutcome({ review }: { review: HumanReview }) {
               </>
             )}
           </p>
+          {review.reviewer_id && (
+            <details className="history-evidence">
+              <summary>Reviewer identity</summary>
+              <dl>
+                <dt>User ID</dt>
+                <dd>
+                  <code>{review.reviewer_id}</code>
+                </dd>
+              </dl>
+            </details>
+          )}
           {review.certificate_id && (
             <div className="review-links">
               <CertificateDownload
@@ -104,7 +119,9 @@ export function RequestReview({
           </>
         )}
       </button>
-      <p>A second person in your team will review the photo.</p>
+      <p>
+        Any other supervisor or administrator in your team can review the photo.
+      </p>
       {error && (
         <p className="error" role="alert">
           {error}

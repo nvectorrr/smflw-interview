@@ -99,6 +99,11 @@ export function ActivityRecords({
                             ? "Pending"
                             : "—"}
                       </span>
+                      {item.review?.status === "completed" && (
+                        <small title={item.review.reviewer_id ?? undefined}>
+                          By {item.review.reviewer_name || "Team reviewer"}
+                        </small>
+                      )}
                     </td>
                     <td>
                       {modelLabel(item.model)}
