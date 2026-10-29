@@ -2,8 +2,17 @@ export type AppTab = "detect" | "activity" | "review" | "team";
 
 export function getTab(url: URL): AppTab {
   const tab = url.searchParams.get("tab");
-  if (tab === "detect" || tab === "activity" || tab === "review" || tab === "team") return tab;
-  return /^\/join\/[^/]+\/?$/.test(url.pathname) || url.searchParams.get("invite") ? "team" : "detect";
+  if (
+    tab === "detect" ||
+    tab === "activity" ||
+    tab === "review" ||
+    tab === "team"
+  )
+    return tab;
+  return /^\/join\/[^/]+\/?$/.test(url.pathname) ||
+    url.searchParams.get("invite")
+    ? "team"
+    : "detect";
 }
 
 export function getTabUrl(current: URL, tab: AppTab): URL {

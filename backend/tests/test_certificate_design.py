@@ -5,11 +5,11 @@ from uuid import uuid4
 import pytest
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
-from smflw_api.certificates import (
+from smflw_api.certificate_pdf import render_certificate
+from smflw_api.certificate_records import (
     CertificateRecord,
     HumanCertificateRecord,
-    _digest,
-    render_certificate,
+    record_digest,
 )
 
 
@@ -37,7 +37,7 @@ def test_certificate_text_fits_page_and_keeps_evidence(monkeypatch, human):
             human_verified=True,
             final=True,
         )
-    record = record_type(**fields, record_sha256=_digest(fields))
+    record = record_type(**fields, record_sha256=record_digest(fields))
     strings = []
     pages = []
     original_draw = canvas.Canvas.drawString

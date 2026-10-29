@@ -15,7 +15,7 @@
     "dev:web": "npm run dev --workspace frontend",
     "build": "npm run build --workspace frontend",
     "test": "uv run --package smflw-api pytest backend/tests",
-    "check": "uv run --package smflw-api ruff check backend scripts && uv run --package smflw-api ruff format --check backend scripts && npm run build && npm run check:infra",
+    "check": "uv run --package smflw-api ruff check backend scripts && uv run --package smflw-api ruff format --check backend scripts && npm run format:check --workspace frontend && npm run build && npm run check:infra",
     "deploy": "sst deploy --stage dev",
     "diff": "sst diff --stage dev",
     "db:start": "supabase start",
@@ -24,7 +24,8 @@
     "db:push": "supabase db push --linked",
     "dev:s3": "uv run --package smflw-api --env-file .env python scripts/dev_s3.py",
     "check:infra": "tsc -p tsconfig.sst.json",
-    "auth:config:dev": "supabase config push --project-ref vxwplcrktnmqhmvafjaa --workdir infra/supabase-auth"
+    "auth:config:dev": "supabase config push --project-ref vxwplcrktnmqhmvafjaa --workdir infra/supabase-auth",
+    "format": "npm run format --workspace frontend"
   },
   "devDependencies": {
     "sst": "4.17.2",

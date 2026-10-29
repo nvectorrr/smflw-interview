@@ -8,8 +8,31 @@ const descriptions: Record<TeamRole, string> = {
   supervisor: "Review results and view team activity",
   admin: "Full oversight and team management",
 };
-const options = roles.map(value => ({ value, label: roleLabels[value], description: descriptions[value] }));
+const options = roles.map((value) => ({
+  value,
+  label: roleLabels[value],
+  description: descriptions[value],
+}));
 
-export function RoleDropdown({ value, onChange, label, disabled = false }: { value: TeamRole; onChange: (role: TeamRole) => void; label: string; disabled?: boolean }) {
-  return <SelectDropdown<TeamRole> className="role-dropdown" value={value} onChange={onChange} label={label} disabled={disabled} options={options} />;
+export function RoleDropdown({
+  value,
+  onChange,
+  label,
+  disabled = false,
+}: {
+  value: TeamRole;
+  onChange: (role: TeamRole) => void;
+  label: string;
+  disabled?: boolean;
+}) {
+  return (
+    <SelectDropdown<TeamRole>
+      className="role-dropdown"
+      value={value}
+      onChange={onChange}
+      label={label}
+      disabled={disabled}
+      options={options}
+    />
+  );
 }

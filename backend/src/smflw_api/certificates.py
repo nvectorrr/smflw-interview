@@ -1,74 +1,26 @@
-"""Persistent service-issued classification records and their PDF representation."""
+"""Persistence, issuance, and downloads for service-issued certificates."""
 
 import hashlib
-import hmac
-import io
 import json
 from contextlib import closing
 from datetime import UTC, datetime
-from typing import Literal
 from uuid import UUID, uuid4
 
 from botocore.exceptions import BotoCoreError, ClientError
 from fastapi import HTTPException
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
-from reportlab.graphics import renderPDF
-from reportlab.graphics.barcode.qr import QrCodeWidget
-from reportlab.graphics.shapes import Drawing
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
+from pydantic import ValidationError
 
 from smflw_api import repository
+from smflw_api.certificate_pdf import render_certificate
+from smflw_api.certificate_records import (
+    Certificate,
+    CertificateRecord,
+    HumanCertificateRecord,
+    record_digest,
+    validate_record_integrity,
+)
 from smflw_api.settings import Settings
 from smflw_api.storage import get_s3_client
-
-
-class CertificateRecord(BaseModel):
-    model_config = ConfigDict(frozen=True, extra="forbid")
-
-    schema_version: Literal[1] = 1
-    certificate_id: UUID
-    issuer: Literal["Hot Dog or Not"] = "Hot Dog or Not"
-    issued_at: datetime
-    image_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
-    is_hot_dog: bool = Field(strict=True)
-    classifier_model: str = Field(min_length=1, max_length=200)
-    owner_id: str | None = None
-    record_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
-
-    @field_validator("issued_at")
-    @classmethod
-    def utc_timestamp(cls, value: datetime) -> datetime:
-        if value.tzinfo is None:
-            raise ValueError("Certificate issue time requires a timezone")
-        return value.astimezone(UTC)
-
-
-class HumanCertificateRecord(CertificateRecord):
-    schema_version: Literal[2] = 2
-    record_type: Literal["human_review"] = "human_review"
-    original_certificate_id: UUID
-    review_id: UUID
-    reviewer_name: Literal["Authorized team supervisor"] = "Authorized team supervisor"
-    human_verified: Literal[True] = True
-    final: Literal[True] = True
-
-
-Certificate = CertificateRecord | HumanCertificateRecord
-
-
-def _digest(fields: dict) -> str:
-    canonical = json.dumps(
-        fields, sort_keys=True, separators=(",", ":"), ensure_ascii=True
-    )
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
-
-
-def _validate_integrity(record: Certificate) -> None:
-    expected = _digest(record.model_dump(mode="json", exclude={"record_sha256"}))
-    if not hmac.compare_digest(expected, record.record_sha256):
-        raise HTTPException(409, "Certificate metadata failed its integrity check.")
 
 
 def _assert_record_owner_active(settings: Settings, record: Certificate) -> UUID:
@@ -155,7 +107,7 @@ def issue_certificate(
         "classifier_model": settings.anthropic_model,
         "owner_id": str(owner),
     }
-    record = CertificateRecord(**fields, record_sha256=_digest(fields))
+    record = CertificateRecord(**fields, record_sha256=record_digest(fields))
     try:
         _persist_certificate(settings, record)
     except (BotoCoreError, ClientError) as exc:
@@ -197,7 +149,7 @@ def _read_certificate(
         raise HTTPException(409, "Certificate metadata is invalid.") from exc
     if record.certificate_id != certificate_id:
         raise HTTPException(409, "Certificate identifier does not match its record.")
-    _validate_integrity(record)
+    validate_record_integrity(record)
     return record
 
 
@@ -247,7 +199,7 @@ def stage_human_certificate(
         "human_verified": True,
         "final": True,
     }
-    record = HumanCertificateRecord(**fields, record_sha256=_digest(fields))
+    record = HumanCertificateRecord(**fields, record_sha256=record_digest(fields))
     # Only the completion transaction publishes this staged record in the index.
     _persist_certificate(settings, record, register=False)
     return record
@@ -322,179 +274,5 @@ def signed_certificate_download(
 
 def public_record(record: Certificate) -> dict:
     """Expose only verification evidence; never identity or private image location."""
-    _validate_integrity(record)
+    validate_record_integrity(record)
     return {**record.model_dump(mode="json", exclude={"owner_id"}), "verified": True}
-
-
-def render_certificate(record: Certificate, verification_url: str) -> bytes:
-    """One-page operational record with a restrained, typographic hierarchy."""
-    _validate_integrity(record)
-    human = isinstance(record, HumanCertificateRecord)
-    buffer = io.BytesIO()
-    pdf = canvas.Canvas(buffer, pagesize=A4, pageCompression=1)
-    pdf.setTitle(f"Verification record / {record.certificate_id}")
-    pdf.setAuthor(record.issuer)
-    pdf.setSubject(
-        "Final human verification" if human else "Automated visual assessment"
-    )
-    width, _ = A4
-    left, right = 42, width - 42
-    ink = colors.HexColor("#1B1C1E")
-    gray = colors.HexColor("#606268")
-    line = colors.HexColor("#CFD0D2")
-
-    def text(x, y, value, size=9, font="Helvetica", color=ink):
-        pdf.setFillColor(color)
-        pdf.setFont(font, size)
-        pdf.drawString(x, y, value)
-
-    def rule(y):
-        pdf.setStrokeColor(line)
-        pdf.setLineWidth(0.55)
-        pdf.line(left, y, right, y)
-
-    def label(x, y, value):
-        text(x, y, value, 7, "Helvetica-Bold", gray)
-
-    def fitted(x, y, value, max_width, size=9, font="Courier", color=ink):
-        # Long references retain every character while respecting their column.
-        size = min(size, max_width / max(pdf.stringWidth(value, font, 1), 1))
-        text(x, y, value, size, font, color)
-
-    text(left, 790, "HD / NOT", 19, "Helvetica-Bold")
-    label(right - 145, 796, "VISUAL INTELLIGENCE / RECORDS")
-    text(right - 145, 781, "HUMAN REVIEW" if human else "MODEL ASSESSMENT", 8)
-    rule(763)
-    label(left, 736, "CERTIFICATE / 02" if human else "CERTIFICATE / 01")
-    text(left, 688, "Human verification." if human else "Visual assessment.", 38)
-    text(
-        left,
-        663,
-        "Final determination by an authorized team supervisor."
-        if human
-        else "Recorded determination from automated image analysis.",
-        10,
-        color=gray,
-    )
-    fitted(left, 643, str(record.certificate_id), right - left, 9)
-
-    pdf.setFillColor(ink)
-    pdf.rect(left, 528, right - left, 94, fill=1, stroke=0)
-    text(
-        left + 18,
-        602,
-        "01 / FINAL HUMAN VERDICT" if human else "01 / MODEL VERDICT",
-        7,
-        "Helvetica-Bold",
-        colors.white,
-    )
-    text(
-        left + 18,
-        561,
-        "HOT DOG" if record.is_hot_dog else "NOT HOT DOG",
-        33,
-        "Helvetica-Bold",
-        colors.white,
-    )
-    text(
-        left + 18,
-        542,
-        f"is_hot_dog = {str(record.is_hot_dog).lower()}",
-        8,
-        "Courier",
-        colors.HexColor("#CFD0D2"),
-    )
-
-    label(left, 505, "02 / ASSESSMENT METADATA")
-    label(left, 484, "ISSUED / UTC")
-    text(left, 468, record.issued_at.strftime("%Y-%m-%d  %H:%M:%S UTC"), 9, "Courier")
-    label(left + 260, 484, "ORIGINAL CLASSIFIER")
-    # Wrap even long custom model identifiers without dropping evidence.
-    model_lines = []
-    current = ""
-    for character in record.classifier_model:
-        if pdf.stringWidth(current + character, "Courier", 7) > right - left - 260:
-            model_lines.append(current)
-            current = ""
-        current += character
-    model_lines.append(current)
-    for index, value in enumerate(model_lines):
-        text(left + 260, 470 - index * 8, value, 7, "Courier")
-    rule(434)
-    label(left, 415, "03 / ORIGINAL IMAGE FINGERPRINT")
-    text(left, 397, "SHA-256 / exact uploaded bytes", 8, color=gray)
-    text(left, 377, record.image_sha256[:32], 11, "Courier")
-    text(left, 362, record.image_sha256[32:], 11, "Courier")
-    rule(347)
-
-    label(left, 327, "04 / EVIDENCE CHAIN")
-    if human:
-        label(left, 307, "ORIGINAL CERTIFICATE")
-        text(left, 292, str(record.original_certificate_id), 9, "Courier")
-        label(left, 273, "REVIEW REFERENCE")
-        text(left, 258, str(record.review_id), 9, "Courier")
-    else:
-        text(
-            left, 306, "The file fingerprint binds this verdict to one exact image.", 9
-        )
-        text(
-            left,
-            289,
-            "Verification compares the stored record and its integrity hash.",
-            9,
-        )
-        text(
-            left,
-            272,
-            "The recorded model verdict remains part of the evidence chain.",
-            9,
-        )
-    rule(242)
-
-    qr = QrCodeWidget(verification_url, barLevel="M")
-    x0, y0, x1, y1 = qr.getBounds()
-    qr_size = 88
-    drawing = Drawing(
-        qr_size,
-        qr_size,
-        transform=[qr_size / (x1 - x0), 0, 0, qr_size / (y1 - y0), 0, 0],
-    )
-    drawing.add(qr)
-    renderPDF.draw(drawing, pdf, left - 5, 143)
-    label(left + 104, 221, "05 / SERVICE VERIFICATION")
-    text(left + 104, 201, "Scan to inspect the authoritative record.", 10)
-    text(
-        left + 104,
-        183,
-        "Compare your file against the recorded image fingerprint.",
-        8,
-        color=gray,
-    )
-    fitted(left + 104, 164, verification_url, right - left - 104, 7, "Helvetica")
-    pdf.linkURL(verification_url, (left, 143, right, 231), relative=0, thickness=0)
-    label(left, 128, "RECORD INTEGRITY / SHA-256")
-    fitted(left, 113, record.record_sha256, right - left, 8)
-    rule(99)
-    text(
-        left,
-        82,
-        "HUMAN VERIFIED. FINAL AND NOT SUBJECT TO APPEAL WITHIN THIS SERVICE."
-        if human
-        else "AUTOMATED ASSESSMENT. THE MODEL RESULT MAY BE INCORRECT.",
-        7.5,
-        "Helvetica-Bold",
-    )
-    text(
-        left,
-        67,
-        "Service-issued evidence; no external accreditation. "
-        "This PDF is not digitally signed.",
-        7.5,
-        color=gray,
-    )
-    rule(51)
-    label(left, 34, "HOT DOG OR NOT / VERIFICATION OFFICE")
-    label(right - 50, 34, "01 / 01")
-    pdf.showPage()
-    pdf.save()
-    return buffer.getvalue()

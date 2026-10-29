@@ -22,7 +22,9 @@ test("invitations default to Team while explicit navigation takes priority", () 
 });
 
 test("navigation preserves invitation and auth callback data", () => {
-  const callback = new URL(`${base}join/ABC1234?invite=ABC1234&code=auth-code#access_token=sample&refresh_token=sample`);
+  const callback = new URL(
+    `${base}join/ABC1234?invite=ABC1234&code=auth-code#access_token=sample&refresh_token=sample`,
+  );
   const next = getTabUrl(callback, "activity");
   assert.equal(next.pathname, callback.pathname);
   assert.equal(next.searchParams.get("invite"), "ABC1234");

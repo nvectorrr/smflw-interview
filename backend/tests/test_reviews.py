@@ -7,6 +7,11 @@ from uuid import uuid4
 import pytest
 from fastapi import HTTPException
 from smflw_api import certificates, reviews
+from smflw_api.certificate_records import (
+    CertificateRecord,
+    record_digest,
+    validate_record_integrity,
+)
 
 
 def test_v1_integrity_and_human_staging_preserve_original():
@@ -20,11 +25,9 @@ def test_v1_integrity_and_human_staging_preserve_original():
         "classifier_model": "original-model",
         "owner_id": str(uuid4()),
     }
-    original = certificates.CertificateRecord(
-        **fields, record_sha256=certificates._digest(fields)
-    )
+    original = CertificateRecord(**fields, record_sha256=record_digest(fields))
     before = original.model_dump_json()
-    certificates._validate_integrity(original)
+    validate_record_integrity(original)
     with patch.object(certificates, "_persist_certificate") as persist:
         human = certificates.stage_human_certificate(
             None, original, uuid4(), uuid4(), False, datetime.now(UTC)
@@ -35,7 +38,7 @@ def test_v1_integrity_and_human_staging_preserve_original():
     assert human.original_certificate_id == original.certificate_id
     assert human.is_hot_dog is False
     assert "owner_id" not in certificates.public_record(human)
-    certificates._validate_integrity(human)
+    validate_record_integrity(human)
 
 
 @pytest.mark.parametrize("verdict", [1, 0, "true", None])

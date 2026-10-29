@@ -3,24 +3,47 @@ import type { ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 
-type AuthState = { session: Session | null; user: User | null; loading: boolean };
+type AuthState = {
+  session: Session | null;
+  user: User | null;
+  loading: boolean;
+};
 const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>({ session: null, user: null, loading: true });
+  const [state, setState] = useState<AuthState>({
+    session: null,
+    user: null,
+    loading: true,
+  });
   useEffect(() => {
     let active = true;
     let receivedEvent = false;
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       receivedEvent = true;
-      if (active) setState({ session, user: session?.user ?? null, loading: false });
+      if (active)
+        setState({ session, user: session?.user ?? null, loading: false });
     });
-    void supabase.auth.getSession().then(({ data }) => {
-      if (active && !receivedEvent) setState({ session: data.session, user: data.session?.user ?? null, loading: false });
-    }).catch(() => {
-      if (active && !receivedEvent) setState({ session: null, user: null, loading: false });
-    });
-    return () => { active = false; subscription.unsubscribe(); };
+    void supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (active && !receivedEvent)
+          setState({
+            session: data.session,
+            user: data.session?.user ?? null,
+            loading: false,
+          });
+      })
+      .catch(() => {
+        if (active && !receivedEvent)
+          setState({ session: null, user: null, loading: false });
+      });
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
   }, []);
   return <AuthContext.Provider value={state}>{children}</AuthContext.Provider>;
 }
