@@ -6,12 +6,16 @@ from uuid import uuid4
 
 import pytest
 from fastapi import HTTPException
+from fastapi.testclient import TestClient
 from smflw_api import certificates, reviews
+from smflw_api.auth import AuthUser, require_user
 from smflw_api.certificate_records import (
     CertificateRecord,
     record_digest,
     validate_record_integrity,
 )
+from smflw_api.main import app
+from smflw_api.settings import get_settings
 
 
 def test_v1_integrity_and_human_staging_preserve_original():
@@ -61,3 +65,55 @@ def test_denied_reviewer_never_stages_a_certificate():
                 reviews.decide_review(None, uuid4(), uuid4(), False)
     assert error.value.status_code == 404
     stage.assert_not_called()
+
+
+@pytest.fixture
+def review_client():
+    actor = uuid4()
+    app.dependency_overrides[get_settings] = lambda: None
+    app.dependency_overrides[require_user] = lambda: AuthUser(id=actor)
+    try:
+        yield TestClient(app), actor
+    finally:
+        app.dependency_overrides.pop(get_settings, None)
+        app.dependency_overrides.pop(require_user, None)
+
+
+@pytest.mark.parametrize("filtered", [False, True])
+def test_review_queue_passes_submitter_filter_to_database(review_client, filtered):
+    client, actor = review_client
+    submitter = uuid4() if filtered else None
+    params = {"limit": 2, "offset": 1}
+    if submitter:
+        params["submitter_id"] = str(submitter)
+    page = {"items": [], "total": 3, "limit": 2, "offset": 1}
+    with (
+        patch.object(reviews.repository, "assert_user_active"),
+        patch.object(reviews.repository, "_rpc", return_value=page) as rpc,
+        patch.object(reviews, "get_s3_client"),
+    ):
+        response = client.get("/reviews", params=params)
+    assert response.status_code == 200
+    assert response.json() == page
+    rpc.assert_called_once_with(
+        None,
+        "hdn_review_queue",
+        {
+            "p_user_id": str(actor),
+            "p_limit": 2,
+            "p_offset": 1,
+            "p_submitter_id": str(submitter) if submitter else None,
+        },
+    )
+
+
+def test_review_queue_rejects_invalid_submitter_before_database_access(review_client):
+    client, _ = review_client
+    with (
+        patch.object(reviews.repository, "assert_user_active"),
+        patch.object(reviews.repository, "_rpc", return_value={"items": []}) as rpc,
+        patch.object(reviews, "get_s3_client"),
+    ):
+        response = client.get("/reviews", params={"submitter_id": "not-a-uuid"})
+    assert response.status_code == 422
+    rpc.assert_not_called()

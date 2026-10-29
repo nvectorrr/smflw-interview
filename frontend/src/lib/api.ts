@@ -277,10 +277,17 @@ export const escalateCheck = (checkId: string) =>
     method: "POST",
     signal: AbortSignal.timeout(20_000),
   });
-export const getReviews = (signal?: AbortSignal, offset = 0) =>
-  request<ReviewPage>(`/reviews?limit=20&offset=${offset}`, {
-    signal: signal ?? AbortSignal.timeout(20_000),
-  });
+export const getReviews = (
+  signal?: AbortSignal,
+  offset = 0,
+  submitterId = "",
+) =>
+  request<ReviewPage>(
+    `/reviews?limit=20&offset=${offset}${submitterId ? `&submitter_id=${encodeURIComponent(submitterId)}` : ""}`,
+    {
+      signal: signal ?? AbortSignal.timeout(20_000),
+    },
+  );
 export const decideReview = (reviewId: string, isHotDog: boolean) =>
   request<HumanReview>(`/reviews/${encodeURIComponent(reviewId)}/decision`, {
     method: "POST",

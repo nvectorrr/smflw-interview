@@ -167,6 +167,7 @@ function HotDogApp() {
             <ReviewDesk
               key={`${teamState?.team?.id}:${teamState?.team?.role}`}
               revision={activityRevision}
+              members={teamState?.members ?? []}
               onDecision={refreshActivity}
             />
           )}

@@ -55,7 +55,7 @@
   animation: panel-appear .18s ease;
 }
 
-:is(.app-tabs button, .select-trigger, .select-options > button, .activity-refresh, .history-pagination button, .privacy-trigger, .privacy-close) {
+:is(.app-tabs button, .select-trigger, .select-options .select-option, .activity-refresh, .history-pagination button, .privacy-trigger, .privacy-close) {
   transition: color .15s ease, background-color .15s ease, border-color .15s ease;
 }
 
@@ -67,7 +67,7 @@
 @media (prefers-reduced-motion: reduce) {
   dialog,
   dialog::backdrop,
-  :is(.app-tabs button, .select-trigger, .select-options > button, .activity-refresh, .history-pagination button, .privacy-trigger, .privacy-close) {
+  :is(.app-tabs button, .select-trigger, .select-options .select-option, .activity-refresh, .history-pagination button, .privacy-trigger, .privacy-close) {
     transition: none;
   }
 

@@ -9,7 +9,11 @@ import {
 
 export function useReviewQueue(revision: number, onDecision: () => void) {
   const [page, setPage] = useState<ReviewPage | null>(null);
-  const [offset, setOffset] = useState(0);
+  const [{ offset, submitterId }, setQuery] = useState({
+    offset: 0,
+    submitterId: "",
+  });
+  const [loadedSubmitterId, setLoadedSubmitterId] = useState("");
   const [selectedId, setSelectedId] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -40,11 +44,11 @@ export function useReviewQueue(revision: number, onDecision: () => void) {
       const timeout = window.setTimeout(() => controller.abort(), 20_000);
       setRefreshing(true);
       try {
-        const next = await getReviews(controller.signal, offset);
+        const next = await getReviews(controller.signal, offset, submitterId);
         if (id !== request.current.id || controller.signal.aborted) return;
         const validOffset = reviewPageOffset(next.total, next.limit, offset);
         if (validOffset !== offset) {
-          setOffset(validOffset);
+          setQuery((current) => ({ ...current, offset: validOffset }));
           return;
         }
         // S3 links last five minutes; renew before expiry without reloading on every poll.
@@ -58,6 +62,7 @@ export function useReviewQueue(revision: number, onDecision: () => void) {
           imagePage.current = offset;
         }
         setPage((current) => mergeReviewPage(current, next, renew));
+        setLoadedSubmitterId(submitterId);
         setSelectedId((current) => selectedReview(next, current)?.id ?? "");
         setError("");
       } catch (cause) {
@@ -76,7 +81,7 @@ export function useReviewQueue(revision: number, onDecision: () => void) {
         }
       }
     },
-    [offset, cancelRefresh],
+    [offset, submitterId, cancelRefresh],
   );
 
   useEffect(() => {
@@ -111,7 +116,8 @@ export function useReviewQueue(revision: number, onDecision: () => void) {
     [cancelRefresh],
   );
 
-  const loading = !page || page.offset !== offset;
+  const loading =
+    !page || page.offset !== offset || loadedSubmitterId !== submitterId;
   const item = loading ? undefined : selectedReview(page, selectedId);
 
   async function decide(isHotDog: boolean) {
@@ -154,9 +160,10 @@ export function useReviewQueue(revision: number, onDecision: () => void) {
   }
 
   return {
-    page,
+    page: loading ? null : page,
     item,
     offset,
+    submitterId,
     loading: loading && !error,
     refreshing,
     busy,
@@ -164,18 +171,22 @@ export function useReviewQueue(revision: number, onDecision: () => void) {
     lastDecision,
     refresh,
     decide,
-    select: (id: string) => {
-      if (!deciding.current) {
-        setSelectedId(id);
-        setDecisionError("");
-      }
+    filterBySubmitter: (next: string) => {
+      if (deciding.current || next === submitterId) return;
+      cancelRefresh();
+      setError("");
+      setDecisionError("");
+      setLastDecision(null);
+      setSelectedId("");
+      imagePage.current = -1;
+      setQuery({ offset: 0, submitterId: next });
     },
     changePage: (next: number) => {
       if (!deciding.current) {
         cancelRefresh();
         setError("");
         setDecisionError("");
-        setOffset(next);
+        setQuery((current) => ({ ...current, offset: next }));
       }
     },
   };

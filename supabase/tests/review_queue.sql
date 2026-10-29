@@ -40,6 +40,8 @@ begin
   assert (public.hdn_review_queue(admin_id,100,0)->>'total')::int=5, 'Own and other-team reviews excluded';
   foreach actor in array array[submitter_id,outsider_id] || actors loop
     assert (public.hdn_review_queue(actor,100,0)->>'total')::int=0, 'Non-members, users, outsiders cannot review';
+    assert (public.hdn_review_queue(actor,100,0,submitter_id)->>'total')::int=0,
+      'Submitter filter cannot grant review permission';
     assert public.hdn_claim_review(actor,reviews[1])->>'error'='not_found', 'Queue exclusion also enforced on claim';
   end loop;
   assert public.hdn_claim_review(admin_id,reviews[6])->>'error'='not_found', 'Admins cannot decide their own review';
@@ -62,6 +64,38 @@ begin
     assert not exists(select 1 from jsonb_array_elements(result->'items') item where item->>'id'=reviews[7]::text),
       'Other-team review never enters shared queue';
   end loop;
+
+  -- Filter before count/pagination, preserving the same authorization boundary.
+  result := public.hdn_review_queue(new_supervisor,100,0,submitter_id);
+  assert (result->>'total')::int=5 and jsonb_array_length(result->'items')=5,
+    'Selected submitter total excludes other team members';
+  assert not exists(select 1 from jsonb_array_elements(result->'items') item where item->>'user_id'<>submitter_id::text),
+    'All filtered items belong to the selected submitter';
+  competitor := public.hdn_review_queue(new_supervisor,2,1,submitter_id);
+  assert (competitor->>'total')::int=5 and jsonb_array_length(competitor->'items')=2,
+    'Filtered total is calculated before pagination';
+  assert competitor->'items' = jsonb_build_array(result->'items'->1,result->'items'->2),
+    'Offset and limit page the filtered queue';
+  competitor := public.hdn_review_queue(new_supervisor,2,5,submitter_id);
+  assert (competitor->>'total')::int=5 and competitor->'items'='[]'::jsonb,
+    'Out-of-range filtered page retains its total';
+  assert (public.hdn_review_queue(new_supervisor,100,0,admin_id)->>'total')::int=1,
+    'Selecting a different teammate changes the filtered count';
+  assert public.hdn_review_queue(new_supervisor,100,0,null::uuid)=public.hdn_review_queue(new_supervisor,100,0),
+    'Explicit null and legacy calls return the full authorized queue';
+  foreach owner_id in array array[admin_id,outsider_id,gen_random_uuid()] loop
+    result := public.hdn_review_queue(admin_id,100,0,owner_id);
+    assert (result->>'total')::int=0 and result->'items'='[]'::jsonb,
+      'Own, foreign-team, and unknown submitters cannot broaden the queue';
+  end loop;
+  insert into public.hdn_erasure_jobs(user_id) values(submitter_id);
+  assert (public.hdn_review_queue(admin_id,100,0,submitter_id)->>'total')::int=0,
+    'Inactive submitter reviews stay excluded';
+  delete from public.hdn_erasure_jobs where user_id=submitter_id;
+  insert into public.hdn_erasure_jobs(user_id) values(admin_id);
+  assert (public.hdn_review_queue(admin_id,100,0,submitter_id)->>'total')::int=0,
+    'Inactive reviewers cannot use the filtered queue';
+  delete from public.hdn_erasure_jobs where user_id=admin_id;
 
   -- All four reviewer entry paths can decide; competing and stale leases cannot win.
   for i in 1..4 loop
@@ -93,6 +127,9 @@ begin
     'Replacement lease can complete';
   assert (public.hdn_review_queue(new_admin,100,0)->>'total')::int=1, 'Completed reviews leave the shared queue';
   assert not has_function_privilege('authenticated','public.hdn_review_queue(uuid,integer,integer)','EXECUTE'), 'Queue is backend-only';
+  assert not has_function_privilege('authenticated','public.hdn_review_queue(uuid,integer,integer,uuid)','EXECUTE'), 'Filtered queue is backend-only';
+  assert not has_function_privilege('anon','public.hdn_review_queue(uuid,integer,integer,uuid)','EXECUTE'), 'Filtered queue is not public';
+  assert has_function_privilege('service_role','public.hdn_review_queue(uuid,integer,integer,uuid)','EXECUTE'), 'Backend can use filtered queue';
   assert not has_function_privilege('anon','public.hdn_review_result(uuid)','EXECUTE'), 'Review identity is private';
 end $$;
 select 'Shared queue, join/promotion eligibility, exclusions, and decision lease checks passed' as result;

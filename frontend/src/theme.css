@@ -19,13 +19,13 @@
 :root[data-theme="dark"] :is(.team-summary,.certificate-verification-card) { border-top-color:#777; }
 :root[data-theme="dark"] :is(.app-tabs button,.auth-switch,.empty-picker u,.usage-details summary,.history-evidence summary,.history-evidence a,.inspector-links a,.history-download,.review-links a,.certificate-record-link,.verdict-pane .certificate-record-link,.certificate-evidence a) { color:#d0d0d0; }
 :root[data-theme="dark"] .app-tabs button[aria-current] { color:#fff; background:transparent; box-shadow:inset 0 -2px #eee; }
-:root[data-theme="dark"] :is(.model-selector label,.image-name input,.team-field input,.team-field select,.member-row select,.auth-field input,.select-dropdown .select-trigger,.select-dropdown .select-options,.select-options > button,.activity-filters select) { background:var(--surface); color:var(--text); border-color:#515151; }
-:root[data-theme="dark"] :is(.model-selector label.selected,.select-options > button[aria-selected="true"]) { background:#303030; border-color:#aaa; }
+:root[data-theme="dark"] :is(.model-selector label,.image-name input,.team-field input,.team-field select,.member-row select,.auth-field input,.select-dropdown .select-trigger,.select-dropdown .select-options,.select-options .select-option,.activity-filters select) { background:var(--surface); color:var(--text); border-color:#515151; }
+:root[data-theme="dark"] :is(.model-selector label.selected,.select-options .select-option[aria-selected="true"]) { background:#303030; border-color:#aaa; }
 :root[data-theme="dark"] .model-selector input { accent-color:#e6e6e6; }
 :root[data-theme="dark"] :is(input::placeholder,.auth-field input[readonly]) { color:#999; }
-:root[data-theme="dark"] :is(.select-dropdown .select-trigger:hover:not(:disabled),.select-options > button:hover,.select-options > button:focus) { background:#353535; color:#fff; }
+:root[data-theme="dark"] :is(.select-dropdown .select-trigger:hover:not(:disabled),.select-options .select-option:hover,.select-options .select-option:focus) { background:#353535; color:#fff; }
 :root[data-theme="dark"] .select-trigger[aria-expanded="true"] { border-color:#b0b0b0; }
-:root[data-theme="dark"] .select-options > button:focus-visible { box-shadow:inset 0 0 0 1px #aaa; }
+:root[data-theme="dark"] .select-options .select-option:focus-visible { box-shadow:inset 0 0 0 1px #aaa; }
 :root[data-theme="dark"] :is(.select-dropdown .select-trigger span.select-value,.select-dropdown .select-trigger span.select-chevron) { color:inherit; }
 :root[data-theme="dark"] .registry-table tr.selected td { background:#333; }
 :root[data-theme="dark"] .registry-table tr:hover td { background:#2c2c2c; }
@@ -56,3 +56,5 @@
 @media(prefers-reduced-motion:reduce) { .theme-switch-track > span { transition:none; } }
 
 :root[data-theme="dark"] .verdict-pane .certificate-document-icon { color:var(--muted); }
+
+:root[data-theme="dark"] .select-options .select-option[data-active="true"] { background:#353535; color:#fff; box-shadow:inset 0 0 0 1px #aaa; }

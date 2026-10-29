@@ -13,6 +13,7 @@ export function SelectDropdown<Value extends string>({
   label,
   options,
   disabled = false,
+  searchable = false,
   className = "",
 }: {
   value: Value;
@@ -20,15 +21,18 @@ export function SelectDropdown<Value extends string>({
   label: string;
   options: Option<Value>[];
   disabled?: boolean;
+  searchable?: boolean;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
+  const [query, setQuery] = useState("");
   const [position, setPosition] = useState<CSSProperties>({});
   const id = useId();
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
   const items = useRef<(HTMLButtonElement | null)[]>([]);
   const search = useRef({ text: "", time: 0 });
   const selected = Math.max(
@@ -36,6 +40,13 @@ export function SelectDropdown<Value extends string>({
     options.findIndex((option) => option.value === value),
   );
   const unavailable = disabled || options.length === 0;
+  const visibleOptions = searchable
+    ? options.filter((option) =>
+        `${option.label} ${option.description ?? ""}`
+          .toLowerCase()
+          .includes(query.trim().toLowerCase()),
+      )
+    : options;
 
   useLayoutEffect(() => {
     if (!open) return;
@@ -71,7 +82,7 @@ export function SelectDropdown<Value extends string>({
       window.removeEventListener("resize", place);
       window.removeEventListener("scroll", scroll, true);
     };
-  }, [open, options]);
+  }, [open, options, query]);
   useEffect(() => {
     if (!open) return;
     function dismiss(event: PointerEvent) {
@@ -82,14 +93,17 @@ export function SelectDropdown<Value extends string>({
   }, [open]);
   useEffect(() => {
     if (!open) return;
-    const index = Math.min(active, options.length - 1);
+    const index = Math.max(0, Math.min(active, visibleOptions.length - 1));
     if (index !== active) {
       setActive(Math.max(0, index));
       return;
     }
-    items.current[index]?.focus({ preventScroll: true });
+    if (!searchable) items.current[index]?.focus({ preventScroll: true });
     items.current[index]?.scrollIntoView({ block: "nearest" });
-  }, [open, active, options.length]);
+  }, [open, active, visibleOptions.length, searchable]);
+  useEffect(() => {
+    if (open && searchable) searchInput.current?.focus({ preventScroll: true });
+  }, [open, searchable]);
   useEffect(() => {
     if (unavailable) setOpen(false);
   }, [unavailable]);
@@ -99,31 +113,45 @@ export function SelectDropdown<Value extends string>({
     trigger.current?.focus({ preventScroll: true });
   }
   function keydown(event: KeyboardEvent) {
-    if (unavailable) return;
+    if (unavailable || event.nativeEvent.isComposing) return;
     if (event.key === "Escape" && open) {
       event.preventDefault();
       event.stopPropagation();
       close();
     } else if (event.key === "Tab" && open) {
       close();
-    } else if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+    } else if (searchable && open && event.key === "Enter") {
       event.preventDefault();
+      const option = visibleOptions[active];
+      if (option) {
+        close();
+        if (option.value !== value) onChange(option.value);
+      }
+    } else if (
+      ["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key) &&
+      !(searchable && open && ["Home", "End"].includes(event.key))
+    ) {
+      event.preventDefault();
+      const count =
+        !open && searchable ? options.length : visibleOptions.length;
+      if (!open) setQuery("");
       const next =
         event.key === "Home"
           ? 0
           : event.key === "End"
-            ? options.length - 1
+            ? Math.max(0, count - 1)
             : !open
               ? selected
-              : (active +
-                  (event.key === "ArrowDown" ? 1 : -1) +
-                  options.length) %
-                options.length;
+              : count
+                ? (active + (event.key === "ArrowDown" ? 1 : -1) + count) %
+                  count
+                : 0;
       search.current.text = "";
       setActive(next);
       setOpen(true);
     } else if (
       open &&
+      !searchable &&
       event.key.length === 1 &&
       event.key !== " " &&
       !event.ctrlKey &&
@@ -171,6 +199,7 @@ export function SelectDropdown<Value extends string>({
         disabled={unavailable}
         onClick={() => {
           search.current.text = "";
+          if (!open) setQuery("");
           setActive(selected);
           setOpen(!open);
         }}
@@ -187,40 +216,72 @@ export function SelectDropdown<Value extends string>({
       <div
         className="select-options"
         data-open={open}
+        data-searchable={searchable}
         data-side={position.bottom === undefined ? "bottom" : "top"}
         inert={!open}
         aria-hidden={!open}
         ref={menu}
         style={position}
-        id={id}
-        role="listbox"
-        aria-label={label}
       >
-        {options.map((option, index) => (
-          <button
-            key={option.value}
-            ref={(element) => {
-              items.current[index] = element;
-            }}
-            type="button"
-            role="option"
-            aria-selected={value === option.value}
-            tabIndex={open && active === index ? 0 : -1}
-            onFocus={() => setActive(index)}
-            onClick={() => {
-              close();
-              if (option.value !== value) onChange(option.value);
-            }}
-          >
-            <span className="select-option-copy">
-              <strong>{option.label}</strong>
-              {option.description && <small>{option.description}</small>}
-            </span>
-            <span className="select-check" aria-hidden="true">
-              {value === option.value ? "✓" : ""}
-            </span>
-          </button>
-        ))}
+        {searchable && (
+          <div className="select-search">
+            <input
+              ref={searchInput}
+              type="text"
+              role="combobox"
+              aria-label={`Search ${label.toLowerCase()}`}
+              aria-autocomplete="list"
+              aria-expanded={open}
+              aria-controls={id}
+              aria-activedescendant={
+                open && visibleOptions[active]
+                  ? `${id}-option-${active}`
+                  : undefined
+              }
+              placeholder="Search by name or email"
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setActive(0);
+              }}
+            />
+          </div>
+        )}
+        <div id={id} role="listbox" aria-label={label}>
+          {visibleOptions.map((option, index) => (
+            <button
+              key={option.value}
+              id={`${id}-option-${index}`}
+              className="select-option"
+              data-active={searchable && active === index}
+              ref={(element) => {
+                items.current[index] = element;
+              }}
+              type="button"
+              role="option"
+              aria-selected={value === option.value}
+              tabIndex={!searchable && open && active === index ? 0 : -1}
+              onFocus={() => setActive(index)}
+              onClick={() => {
+                close();
+                if (option.value !== value) onChange(option.value);
+              }}
+            >
+              <span className="select-option-copy">
+                <strong>{option.label}</strong>
+                {option.description && <small>{option.description}</small>}
+              </span>
+              <span className="select-check" aria-hidden="true">
+                {value === option.value ? "✓" : ""}
+              </span>
+            </button>
+          ))}
+        </div>
+        {visibleOptions.length === 0 && (
+          <div className="select-empty" role="status">
+            No matches found
+          </div>
+        )}
       </div>
     </div>
   );

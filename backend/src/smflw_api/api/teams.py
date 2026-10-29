@@ -60,8 +60,9 @@ def review_queue(
     user: CurrentUser,
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
+    submitter_id: UUID | None = None,
 ):
-    return reviews.review_queue(settings, user.id, limit, offset)
+    return reviews.review_queue(settings, user.id, limit, offset, submitter_id)
 
 
 @router.post("/reviews/{review_id}/decision", tags=["reviews"])

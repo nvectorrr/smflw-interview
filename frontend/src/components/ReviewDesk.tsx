@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { modelLabel } from "../lib/api";
-import type { ReviewItem } from "../lib/api";
+import type { ReviewItem, TeamMember } from "../lib/api";
 import { useReviewQueue } from "../hooks/useReviewQueue";
 import { EmptyState, LoadingState, Spinner } from "./WorkspaceState";
 import { VerdictIcon } from "./ResultVerdict";
@@ -9,17 +9,21 @@ import { SelectDropdown } from "./SelectDropdown";
 export function ReviewDesk({
   revision,
   onDecision,
+  members,
 }: {
   revision: number;
   onDecision: () => void;
+  members: TeamMember[];
 }) {
   const queue = useReviewQueue(revision, onDecision);
-  return <ReviewDeskView queue={queue} />;
+  return <ReviewDeskView queue={queue} members={members} />;
 }
 
 export function ReviewDeskBootstrap() {
   return (
     <ReviewDeskView
+      members={[]}
+      preparing
       queue={{
         page: null,
         item: undefined,
@@ -31,7 +35,8 @@ export function ReviewDeskBootstrap() {
         lastDecision: null,
         refresh: async () => {},
         decide: async () => {},
-        select: () => {},
+        submitterId: "",
+        filterBySubmitter: () => {},
         changePage: () => {},
       }}
     />
@@ -40,8 +45,12 @@ export function ReviewDeskBootstrap() {
 
 export function ReviewDeskView({
   queue,
+  members = [],
+  preparing = false,
 }: {
   queue: ReturnType<typeof useReviewQueue>;
+  members?: TeamMember[];
+  preparing?: boolean;
 }) {
   const {
     page,
@@ -53,7 +62,8 @@ export function ReviewDeskView({
     lastDecision,
     refresh,
     decide,
-    select,
+    submitterId,
+    filterBySubmitter,
     changePage,
   } = queue;
   const paginated = !!page && page.total > page.limit;
@@ -68,8 +78,8 @@ export function ReviewDeskView({
           <p className="eyebrow">02 / HUMAN OVERSIGHT</p>
           <h1 id="review-title">Review desk</h1>
           <p className="subtitle">
-            A shared team queue for supervisors and administrators. Choose any
-            pending request; another reviewer handles your own photos.
+            A shared team queue for supervisors and administrators. Filter by
+            team member; another reviewer handles your own photos.
           </p>
         </div>
         <button
@@ -96,33 +106,25 @@ export function ReviewDeskView({
         </p>
         <div className="activity-filters">
           <div className="activity-filter">
-            <span>Choose a request</span>
+            <span>Team member</span>
             <SelectDropdown
-              value={item?.id ?? ""}
-              onChange={select}
-              label="Review request"
-              disabled={busy || loading || !item}
-              options={
-                item && page
-                  ? page.items.map((request) => ({
-                      value: request.id,
-                      label:
-                        request.image_name ||
-                        request.file_name ||
-                        "Untitled photo",
-                      description: request.submitter_name || "A teammate",
-                    }))
-                  : [
-                      {
-                        value: "",
-                        label: loading
-                          ? "Loading requests…"
-                          : error
-                            ? "Queue unavailable"
-                            : "No pending requests",
-                      },
-                    ]
-              }
+              value={submitterId}
+              onChange={filterBySubmitter}
+              label="Team member"
+              searchable
+              disabled={busy || preparing}
+              options={[
+                { value: "", label: "All team members" },
+                ...members.map((member) => ({
+                  value: member.user_id,
+                  label: member.display_name || member.email || "Team member",
+                  description: member.display_name ? member.email : undefined,
+                })),
+                ...(submitterId &&
+                !members.some((member) => member.user_id === submitterId)
+                  ? [{ value: submitterId, label: "Former team member" }]
+                  : []),
+              ]}
             />
           </div>
         </div>
@@ -149,10 +151,18 @@ export function ReviewDeskView({
         ) : (
           <EmptyState
             kind="review"
-            title={error ? "Queue unavailable" : "All caught up"}
+            title={
+              error
+                ? "Queue unavailable"
+                : submitterId
+                  ? "No requests from this member"
+                  : "All caught up"
+            }
             description={
               error ||
-              "There are no pending requests from other team members. New requests will appear here automatically."
+              (submitterId
+                ? "No pending requests from this member are available to you. Choose All team members to return to the shared queue."
+                : "There are no pending requests from other team members. New requests will appear here automatically.")
             }
           />
         )}

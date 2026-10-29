@@ -128,7 +128,11 @@ def escalate_check(settings: Settings, user_id: UUID, check_id: UUID) -> dict:
 
 
 def review_queue(
-    settings: Settings, user_id: UUID, limit: int = 20, offset: int = 0
+    settings: Settings,
+    user_id: UUID,
+    limit: int = 20,
+    offset: int = 0,
+    submitter_id: UUID | None = None,
 ) -> dict:
     repository.assert_user_active(settings, user_id)
     page = repository._rpc(
@@ -138,6 +142,7 @@ def review_queue(
             "p_user_id": str(user_id),
             "p_limit": max(1, min(limit, 100)),
             "p_offset": max(0, offset),
+            "p_submitter_id": str(submitter_id) if submitter_id else None,
         },
     )
     try:

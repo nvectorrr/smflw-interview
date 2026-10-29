@@ -125,7 +125,8 @@ test("activity reserves its registry during loading and scopes review actions", 
         lastDecision: null,
         refresh: async () => {},
         decide: async () => {},
-        select: noop,
+        submitterId: "",
+        filterBySubmitter: noop,
         changePage: noop,
       };
       const states = [
@@ -159,6 +160,22 @@ test("activity reserves its registry during loading and scopes review actions", 
       assert.match(states[1], /All caught up/);
       assert.match(states[3], /class="review-card"/);
       assert.match(states[4], /Decision saved/);
+      assert.doesNotMatch(states[3], /Choose a request|label="Review request"/);
+      assert.match(states[3], /role="combobox"/);
+      assert.match(states[3], /All team members/);
+      const filtered = render(ReviewDeskView, {
+        queue: { ...baseQueue, submitterId: "member-1" },
+        members: [
+          {
+            user_id: "member-1",
+            display_name: "Ada Lovelace",
+            email: "ada@example.com",
+          },
+        ],
+      });
+      assert.match(filtered, /No requests from this member/);
+      assert.match(filtered, /Team member: Ada Lovelace/);
+      assert.match(filtered, /ada@example.com/);
     },
   );
 });
