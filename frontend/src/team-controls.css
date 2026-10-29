@@ -1,0 +1,9 @@
+/* Roles share one fixed column; removal belongs to the member identity. */
+.member-list .member-row { display:grid; grid-template-columns:minmax(0,1fr) 160px; gap:20px; align-items:start; }
+.member-list .member-actions { display:block; width:auto; margin:0; }
+.member-list .member-actions .role-dropdown { width:100%; }
+.member-identity .member-remove { display:block; width:fit-content; min-height:28px; padding:4px 0; margin-top:3px; text-align:left; border:0; text-decoration:underline; text-underline-offset:3px; }
+.member-identity .member-remove:hover:not(:disabled) { background:transparent; text-decoration-thickness:2px; }
+.compare-file-control { display:flex; align-items:center; gap:12px; min-width:0; }
+.compare-file-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted); font-size:12px; }
+@media(max-width:520px) { .member-list .member-row { grid-template-columns:minmax(0,1fr) 125px; gap:12px; }.compare-file-control { flex-wrap:wrap; }.compare-file-name { flex-basis:100%; } }

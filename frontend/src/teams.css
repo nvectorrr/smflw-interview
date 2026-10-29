@@ -1,0 +1,58 @@
+.app-tabs { flex-wrap: wrap; }
+.team-section, .review-desk { padding-top: 42px; }
+.team-card { padding: 28px; border: 1px solid #dcdcdc; border-radius: 2px; background: #ffffff; }
+.team-card h2, .review-card h2 { font: 600 28px Arial, Helvetica, sans-serif; letter-spacing: -.035em; margin: 0 0 12px; overflow-wrap: anywhere; }
+.team-card p { color: #737373; font-size: 12px; line-height: 1.8; margin: 0 0 20px; }
+.team-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.team-field { display: grid; gap: 8px; font-size: 12px; color: #5e5e5e; margin-bottom: 18px; }
+.team-field input, .team-field select, .member-row select { min-width: 0; width: 100%; border: 1px solid #d1d1d1; border-radius: 2px; padding: 12px; color: #202020; background: #f6f6f6; font: inherit; }
+.team-field input { font-size: 16px; }
+.team-field input:focus, .team-field select:focus, .member-row select:focus { outline: 2px solid #252525; outline-offset: 2px; }
+.team-summary { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+.team-summary h2 { margin: 10px 0; }
+.team-summary p { margin: 0; }
+.role-badge { display: inline-block; padding: 7px 12px; border-radius: 2px; background: #f0f0f0; color: #525252; font-size: 11px; white-space: nowrap; }
+.role-guide { padding: 14px 0 22px; }
+.role-guide p { font-size: 11px; color: #737373; line-height: 1.8; }
+.member-list { display: grid; }
+.member-row { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 15px 0; border-bottom: 1px solid #e2e2e2; }
+.member-row:last-child { border-bottom: 0; }
+.member-row > div { min-width: 0; }
+.member-row strong { font-size: 12px; display: block; overflow-wrap: anywhere; }
+.member-row span:not(.role-badge):not(.sr-only) { display: block; color: #737373; font-size: 10px; line-height: 1.7; margin-top: 5px; overflow-wrap: anywhere; }
+.member-row select { width: 115px; font-size: 11px; padding: 9px; }
+.member-row select:disabled { opacity: .6; }
+.invite-result { border-top: 1px solid #e2e2e2; padding-top: 20px; margin-top: 22px; }
+.invite-result input { font-size: 12px; }
+.invitations { margin-top: 20px; }
+.team-notice, .review-saved { padding: 16px 20px; border: 1px solid #ccd8c2; border-radius: 2px; background: #edf5f0; color: #477042; font-size: 12px; line-height: 1.7; }
+.review-saved { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+.review-label { font-size: 9px; font-weight: 600; letter-spacing: .12em; color: #525252; }
+.request-review { margin: 18px 0; }
+.request-review p { font-size: 10px; color: #737373; line-height: 1.7; margin: 8px 0 0; }
+.request-review .error { color: #a63f2a; text-align: left; }
+.human-review { margin: 18px 0 0; padding: 16px; border: 1px solid #dcdcdc; background: #f6f6f6; border-radius: 2px; }
+.human-review.completed { background: #edf5f0; border-color: #d2dec7; }
+.human-review strong { display: block; margin-top: 9px; font-size: 13px; color: #323232; }
+.human-review p { color: #737373; font-size: 11px; line-height: 1.7; margin: 8px 0; }
+.review-links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+.review-links a { color: #525252; font-size: 11px; text-underline-offset: 3px; }
+.queue-count { font-size: 11px; color: #737373; margin: 0 0 18px; text-align: center; line-height: 1.8; }
+.review-card { max-width: 650px; margin: 0 auto; background: #ffffff; border: 1px solid #dcdcdc; border-radius: 2px; overflow: hidden; box-shadow: 0 12px 30px #20202008; }
+.review-photo { height: min(48vw, 430px); min-height: 240px; background: #e8e8e8; display: flex; align-items: center; justify-content: center; }
+.review-photo img { width: 100%; height: 100%; object-fit: contain; }
+.review-card-body { padding: 26px 30px; text-align: center; }
+.review-card h2 { margin: 12px 0; font-size: 30px; }
+.review-context, .review-final-note { font-size: 11px; color: #737373; line-height: 1.8; }
+.review-decisions { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 26px; }
+.review-decisions button { padding: 17px 12px; border-radius: 2px; font-size: 11px; font-weight: 700; letter-spacing: .06em; cursor: pointer; border: 1px solid; }
+.review-decisions button span { display: block; font-size: 30px; line-height: 1; margin-bottom: 9px; }
+.review-no { background: #fbefed; color: #a64630; border-color: #dfbaaa !important; }
+.review-yes { background: #edf5f0; color: #3c6334; border-color: #b6c6aa !important; }
+.review-decisions button:not(:disabled):hover { box-shadow: 0 4px 12px #20202015; transform: translateY(-2px); }
+.review-decisions button:disabled { opacity: .45; cursor: default; }
+.review-final-note { font-size: 10px; margin: 18px 0 0; }
+.team-section button:focus-visible, .review-desk button:focus-visible { outline: 2px solid #252525; outline-offset: 3px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.certificate-evidence a { color: #525252; }
+@media (max-width: 680px) { .app-tabs { gap: 4px; } .app-tabs button { padding: 10px 12px; font-size: 11px; } .team-columns { grid-template-columns: 1fr; } .team-card { padding: 22px; } .team-summary { align-items: flex-start; } .team-card h2 { font-size: 25px; } .review-card-body { padding: 22px; } .review-photo { height: 330px; } .review-decisions { gap: 12px; } .team-section, .review-desk { padding-top: 34px; } }

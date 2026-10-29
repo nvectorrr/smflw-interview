@@ -1,0 +1,36 @@
+{
+  "name": "smflw-interview",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "frontend"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n s3,api,web \"npm:dev:s3\" \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "uv run --package smflw-api --env-file .env uvicorn smflw_api.main:app --reload --reload-dir backend/src --host 127.0.0.1 --port 8000",
+    "dev:web": "npm run dev --workspace frontend",
+    "build": "npm run build --workspace frontend",
+    "test": "uv run --package smflw-api pytest backend/tests",
+    "check": "uv run --package smflw-api ruff check backend scripts && uv run --package smflw-api ruff format --check backend scripts && npm run build && npm run check:infra",
+    "deploy": "sst deploy --stage dev",
+    "diff": "sst diff --stage dev",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:link": "supabase link --project-ref vxwplcrktnmqhmvafjaa",
+    "db:push": "supabase db push --linked",
+    "dev:s3": "uv run --package smflw-api --env-file .env python scripts/dev_s3.py",
+    "check:infra": "tsc -p tsconfig.sst.json",
+    "auth:config:dev": "supabase config push --project-ref vxwplcrktnmqhmvafjaa --workdir infra/supabase-auth"
+  },
+  "devDependencies": {
+    "sst": "4.17.2",
+    "supabase": "2.122.0",
+    "concurrently": "^9.2.1",
+    "typescript": "^5.9.3",
+    "@types/node": "^24.0.0"
+  }
+}

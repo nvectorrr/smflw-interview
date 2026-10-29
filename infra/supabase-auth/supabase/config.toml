@@ -1,0 +1,9 @@
+# Sparse remote auth config: undeclared settings remain unchanged.
+project_id = "smflw-auth-redirect-fix"
+
+[auth]
+site_url = "https://d37vhte4c7hh1c.cloudfront.net"
+additional_redirect_urls = ["https://d37vhte4c7hh1c.cloudfront.net", "https://d37vhte4c7hh1c.cloudfront.net/**", "http://127.0.0.1:5173", "http://localhost:5173"]
+
+[auth.email]
+enable_confirmations = false

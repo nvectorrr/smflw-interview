@@ -1,0 +1,66 @@
+/* Image dimensions never participate in the workspace's intrinsic sizing. */
+.classifier-content { min-width:0; }
+.classifier-content .upload-pane,.classifier-content .verdict-pane { min-width:0; min-height:0; }
+.classifier-content .picker { min-width:0; overflow:hidden; }
+.classifier-content .picker label { position:relative; min-width:0; min-height:0; }
+.classifier-content .picker img { position:absolute; inset:0; display:block; width:100%; height:100%; max-width:100%; max-height:100%; object-fit:contain; }
+.classifier-content .file-meta { min-width:0; }
+.classifier-content .filename { min-width:0; max-width:60%; }
+.classifier-content .verdict-pane { background:#fff; }
+.classifier-content .verdict { min-height:100px; }
+.classifier-content .verdict:has(.result-verdict) { flex:0 0 auto; min-height:0; padding:12px 0; }
+
+/* Keep the desktop task on one screen. Short/narrow screens retain natural scrolling. */
+@media(min-width:1000px) and (min-height:760px) {
+  .app-shell.is-classify { height:100svh; min-height:0; display:flex; flex-direction:column; }
+  .app-shell.is-classify > .topbar,.app-shell.is-classify > .app-tabs { flex-shrink:0; }
+  .app-shell.is-classify > .classifier-content { display:flex; flex:1 1 0; flex-direction:column; min-height:0; }
+  .classifier-content .intro { flex-shrink:0; padding:18px 0 16px; }
+  .classifier-content .intro .eyebrow { margin-bottom:6px; }
+  .classifier-content .intro h1 { font-size:30px; line-height:1.1; margin-bottom:7px; }
+  .classifier-content .intro .subtitle { font-size:13px; line-height:1.5; }
+  .classifier-content .workbench { flex:1 1 0; min-height:0; grid-template-columns:minmax(0,1fr) clamp(370px,39vw,560px); }
+  .classifier-content .upload-pane { display:flex; flex-direction:column; padding:18px; }
+  .classifier-content .picker { flex:1 1 0; height:auto; min-height:0; }
+  .classifier-content .file-meta { flex-shrink:0; margin-top:9px; }
+  .classifier-content .verdict-pane { padding:18px; overflow-y:auto; }
+  .classifier-content .verdict-pane > * { flex-shrink:0; }
+  .classifier-content .step-label { margin-bottom:12px; padding-bottom:10px; }
+  .classifier-content .model-selector { margin-bottom:8px; }
+  .classifier-content .model-selector legend { margin-bottom:6px; }
+  .classifier-content .model-selector label { padding:9px 10px; }
+  .classifier-content .model-selector small { margin-top:1px; }
+  .classifier-content .verdict { flex:1 0 auto; min-height:90px; padding:8px 0 12px; }
+  .classifier-content .verdict:has(.result-verdict) { flex:1 0 auto; min-height:0; padding:8px 0; }
+  .classifier-content .verdict .state-icon { width:48px; height:48px; margin-bottom:12px; }
+  .classifier-content .verdict h2 { font-size:23px; }
+  .classifier-content .verdict-pane > .button { min-height:36px; padding:9px 12px; }
+  .classifier-content .powered { margin:9px 0 0; font-size:8px; }
+  .classifier-content .account-hint { margin-bottom:10px; }
+  .classifier-content .error { margin:4px 0 8px; }
+  .app-shell.is-classify > footer { flex-shrink:0; margin-top:12px; padding:10px 0; line-height:18px; }
+}
+@media(max-width:999px), (max-height:759px) {
+  .classifier-content .picker { height:clamp(240px,40svh,420px); }
+}
+@media(min-width:1000px) and (min-height:760px) and (max-height:850px) {
+  .classifier-content .verdict:has(.result-verdict) { padding:4px 0; }
+  .classifier-content .result-verdict { min-height:64px; gap:6px; padding:4px 0; }
+  .classifier-content .step-label { margin-bottom:10px; }
+  .classifier-content .powered { margin-top:6px; }
+}
+
+.classifier-content .source-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:32px; flex-shrink:0; padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid var(--line); box-sizing:content-box; }
+.classifier-content .source-heading .step-label { margin:0; padding:0; border:0; }
+.classifier-content .verdict-pane > .step-label { min-height:32px; padding-bottom:12px; margin-bottom:12px; box-sizing:content-box; }
+.clear-photo { display:grid; place-items:center; flex-shrink:0; width:32px; height:32px; padding:0; border:1px solid transparent; border-radius:0; background:transparent; color:var(--muted); cursor:pointer; }
+.clear-photo:hover:not(:disabled) { background:var(--surface-subtle); color:var(--text); border-color:var(--muted); }
+.clear-photo:focus-visible { outline:2px solid var(--text); outline-offset:3px; }
+.clear-photo:disabled { opacity:.4; cursor:default; }
+.source-metadata { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:10px 24px; flex-shrink:0; margin:12px 0 0; padding-top:12px; border-top:1px solid var(--line); font-size:11px; }
+.source-metadata > div { min-width:0; }
+.source-metadata .source-filename { grid-column:1 / -1; }
+.source-metadata dt { margin-bottom:4px; color:var(--muted); font-size:9px; text-transform:uppercase; letter-spacing:.08em; }
+.source-metadata dd { margin:0; color:var(--text); font-variant-numeric:tabular-nums; }
+.source-filename dd { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.classifier-content .powered { margin-bottom:14px; }

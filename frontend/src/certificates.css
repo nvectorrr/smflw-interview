@@ -1,0 +1,40 @@
+.certificate-panel { margin: 20px 0 16px; padding: 18px; border: 1px solid #d1d1d1; border-radius: 2px; background: #ffffff; text-align: left; }
+.certificate-panel-heading { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 15px; }
+.certificate-document-icon { font-size: 26px; line-height: 1; color: #525252; }
+.certificate-panel-heading strong { font-size: 12px; font-weight: 600; color: #323232; }
+.certificate-panel-heading p { font-size: 10px; line-height: 1.6; color: #737373; margin: 5px 0 0; }
+.certificate-download { display: flex; align-items: center; justify-content: center; gap: 18px; text-align: center; text-decoration: none; }
+.certificate-record-link { display: block; width: fit-content; max-width: 100%; color: #525252; margin: 12px auto 0; text-align: center; font-size: 10px; line-height: 1.5; text-underline-offset: 3px; }
+.certificate-download:focus-visible, .certificate-record-link:focus-visible { outline: 2px solid #676767; outline-offset: 4px; }
+.certificate-verification .intro h1 { font-size: clamp(36px, 6vw, 58px); }
+.certificate-verification-card { max-width: 740px; margin: 0 auto; padding: 34px; border: 1px solid #dcdcdc; border-radius: 2px; background: #ffffff; }
+.certificate-verification-card > [role="status"] { text-align: center; }
+.certificate-verification-symbol { font-size: 36px; line-height: 1; color: #525252; }
+.is-verified .certificate-verification-symbol { color: #477042; }
+.certificate-verification-card h2 { font-family: Arial, Helvetica, sans-serif; font-size: 28px; font-weight: 600; letter-spacing: -.035em; margin: 16px 0 10px; }
+.certificate-verification-card > [role="status"] p { color: #737373; font-size: 13px; line-height: 1.7; }
+.certificate-verified-verdict { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 25px 18px; margin: 24px 0; background: #f0f0f0; border-radius: 2px; }
+.certificate-verified-verdict > span { font-size: 9px; letter-spacing: .12em; color: #737373; }
+.certificate-verified-verdict strong { font-family: Arial, Helvetica, sans-serif; font-size: 36px; letter-spacing: -.035em; }
+.certificate-verified-verdict code { font-size: 11px; color: #737373; }
+.certificate-evidence { margin: 0; }
+.certificate-evidence > div { display: grid; grid-template-columns: 165px minmax(0, 1fr); gap: 18px; padding: 14px 0; border-bottom: 1px solid #e2e2e2; }
+.certificate-evidence dt { font-size: 11px; color: #737373; }
+.certificate-evidence dd { margin: 0; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.certificate-evidence code { font-size: 11px; }
+.certificate-verification-note { font-size: 11px; color: #737373; line-height: 1.8; margin: 20px 0; }
+@media (max-width: 680px) {
+  .certificate-verification-card { padding: 24px 20px; }
+  .certificate-verification-card h2 { font-size: 25px; }
+  .certificate-evidence > div { grid-template-columns: 1fr; gap: 6px; }
+  .certificate-panel { padding: 15px; }
+}
+
+.certificate-file-check { margin: 22px 0; padding: 18px; border: 1px dashed #c6c6c6; border-radius: 2px; background: #f6f6f6; }
+.certificate-file-check label { display: block; font-size: 12px; font-weight: 600; }
+.certificate-file-check p { font-size: 10px; color: #737373; line-height: 1.7; margin: 7px 0 12px; }
+.certificate-file-check input { font-size: 11px; width: 100%; color: #737373; }
+.certificate-file-check input::file-selector-button { border: 1px solid #d1d1d1; background: #ffffff; color: #323232; border-radius: 2px; padding: 8px 12px; margin-right: 10px; cursor: pointer; }
+.certificate-file-check .certificate-file-result { margin: 12px 0 0; }
+.certificate-file-result.match { color: #3c6334; }
+.certificate-file-result.mismatch, .certificate-file-result.error { color: #a64630; }

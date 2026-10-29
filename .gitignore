@@ -1,0 +1,59 @@
+# Credentials and local environment
+.env
+.env.*
+!.env.example
+.aws/
+.ssh/
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Dependencies, build output and generated SST bindings
+node_modules/
+dist/
+build/
+.venv/
+venv/
+.sst/
+**/sst.pyi
+**/sst-env.d.ts
+*.tsbuildinfo
+*.egg-info/
+
+# Python/tool caches and test reports
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage/
+playwright-report/
+test-results/
+
+# Local Supabase state and runtime data
+**/supabase/.temp/
+**/supabase/.branches/
+*.db
+*.sqlite
+*.sqlite3
+uploads/
+
+# Editor, OS and scratch files
+.idea/
+.vscode/
+.DS_Store
+._*
+*.log
+*.swp
+*.swo
+*~
+/tmp/
+/work/
+/docs/superpowers/
+
+# Kept local until publication is requested
+/README.md
