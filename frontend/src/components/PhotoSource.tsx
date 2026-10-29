@@ -116,7 +116,7 @@ export function PhotoSource({
       <div className="file-meta">
         <span id="file-help">JPG, PNG, WebP · up to 5 MB</span>
       </div>
-      <div className="source-meta-slot">
+      <div className="source-meta-slot" hidden={!file}>
         {file && (
           <dl className="source-metadata" aria-label="Image metadata">
             <div className="source-filename">

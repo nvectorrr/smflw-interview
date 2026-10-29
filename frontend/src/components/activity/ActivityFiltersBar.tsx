@@ -7,6 +7,7 @@ type ActivityFiltersBarProps = {
   filters: ActivityFilters;
   onFilter: (key: keyof ActivityFilters, value: string) => void;
   onReset: () => void;
+  disabled?: boolean;
 };
 
 export function ActivityFiltersBar({
@@ -15,6 +16,7 @@ export function ActivityFiltersBar({
   filters,
   onFilter,
   onReset,
+  disabled = false,
 }: ActivityFiltersBarProps) {
   return (
     <div className="activity-filters">
@@ -22,6 +24,7 @@ export function ActivityFiltersBar({
         <div className="activity-filter">
           <span>Member</span>
           <SelectDropdown
+            disabled={disabled}
             label="Member"
             value={filters.user_id ?? ""}
             onChange={(value) => onFilter("user_id", value)}
@@ -38,6 +41,7 @@ export function ActivityFiltersBar({
       <div className="activity-filter">
         <span>Final result</span>
         <SelectDropdown
+          disabled={disabled}
           label="Final result"
           value={filters.result ?? ""}
           onChange={(value) => onFilter("result", value)}
@@ -51,6 +55,7 @@ export function ActivityFiltersBar({
       <div className="activity-filter">
         <span>Human review</span>
         <SelectDropdown
+          disabled={disabled}
           label="Human review"
           value={filters.verification ?? ""}
           onChange={(value) => onFilter("verification", value)}
@@ -65,6 +70,7 @@ export function ActivityFiltersBar({
       <div className="activity-filter">
         <span>Model</span>
         <SelectDropdown
+          disabled={disabled}
           label="Model"
           value={filters.model ?? ""}
           onChange={(value) => onFilter("model", value)}
@@ -75,7 +81,11 @@ export function ActivityFiltersBar({
           ]}
         />
       </div>
-      <button className="activity-refresh" onClick={onReset}>
+      <button
+        className="activity-refresh"
+        disabled={disabled}
+        onClick={onReset}
+      >
         Reset filters
       </button>
     </div>

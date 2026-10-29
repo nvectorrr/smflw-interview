@@ -7,10 +7,14 @@ import type {
   ActivityFilters,
 } from "../lib/api";
 
-import { EmptyState, LoadingState, Spinner } from "./WorkspaceState";
+import { EmptyState, Spinner } from "./WorkspaceState";
 import { ActivityFiltersBar } from "./activity/ActivityFiltersBar";
 import { ActivityStats } from "./activity/ActivityStats";
-import { ActivityRecords } from "./activity/ActivityRecords";
+import {
+  ActivityRecords,
+  ActivityRecordsSkeleton,
+} from "./activity/ActivityRecords";
+import "./activity/activity-stability.css";
 
 export function ActivityPanel({
   active,
@@ -19,6 +23,7 @@ export function ActivityPanel({
   members,
   userId,
   onClassify,
+  onOpenTeam,
 }: {
   active: boolean;
   revision: number;
@@ -26,6 +31,7 @@ export function ActivityPanel({
   members: TeamState["members"];
   userId: string;
   onClassify: () => void;
+  onOpenTeam: () => void;
 }) {
   const teamView = team?.role === "admin" || team?.role === "supervisor";
   const [page, setPage] = useState<HistoryPage | null>(null);
@@ -36,15 +42,6 @@ export function ActivityPanel({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
-  useEffect(() => {
-    setOffset(0);
-  }, [revision]);
-  useEffect(() => {
-    setFilters({});
-    setOffset(0);
-    setPage(null);
-    setStats(null);
-  }, [team?.id, team?.role]);
   useEffect(() => {
     if (!active) return;
     const controller = new AbortController();
@@ -58,6 +55,13 @@ export function ActivityPanel({
     ])
       .then(([history, usage]) => {
         if (current) {
+          const lastOffset =
+            Math.max(0, Math.ceil(history.total / history.limit) - 1) *
+            history.limit;
+          if (offset > lastOffset) {
+            setOffset(lastOffset);
+            return;
+          }
           setPage(history);
           setStats(usage);
           setSelectedId((value) =>
@@ -142,8 +146,11 @@ export function ActivityPanel({
             <EmptyState title="Records unavailable" description={error} />
           ))}
       </div>
-      {loading && !page && <LoadingState records label="Loading activity…" />}
-      {stats && <ActivityStats stats={stats} />}
+      {loading && !page ? (
+        <ActivitySkeleton teamView={teamView} />
+      ) : (
+        stats && <ActivityStats stats={stats} />
+      )}
       {page && page.items.length > 0 ? (
         <ActivityRecords
           active={active}
@@ -154,13 +161,13 @@ export function ActivityPanel({
           teamView={teamView}
           team={team}
           userId={userId}
+          onOpenTeam={onOpenTeam}
           onSelect={setSelectedId}
           onOffsetChange={setOffset}
           onReviewRequested={() => setRetry((value) => value + 1)}
         />
       ) : (
-        !loading &&
-        !error && (
+        page && (
           <EmptyState
             title={
               Object.values(filters).some(Boolean)
@@ -181,6 +188,50 @@ export function ActivityPanel({
           </EmptyState>
         )
       )}
+    </section>
+  );
+}
+
+function ActivitySkeleton({ teamView }: { teamView: boolean }) {
+  return (
+    <div className="activity-skeleton" role="status">
+      <span className="sr-only">Loading activity…</span>
+      <div aria-hidden="true">
+        <ActivityStats stats={null} />
+        <ActivityRecordsSkeleton teamView={teamView} />
+      </div>
+    </div>
+  );
+}
+
+export function ActivityBootstrap() {
+  return (
+    <section
+      className="activity"
+      aria-busy="true"
+      aria-label="Loading activity"
+    >
+      <div className="activity-heading">
+        <div>
+          <p className="eyebrow">01 / OPERATIONAL RECORD</p>
+          <h1>Activity</h1>
+          <p className="subtitle">
+            Classification evidence, human determinations and model usage.
+          </p>
+        </div>
+        <button className="activity-refresh" disabled>
+          <Spinner /> Updating…
+        </button>
+      </div>
+      <ActivityFiltersBar
+        teamView
+        members={[]}
+        filters={{}}
+        disabled
+        onFilter={() => {}}
+        onReset={() => {}}
+      />
+      <ActivitySkeleton teamView />
     </section>
   );
 }

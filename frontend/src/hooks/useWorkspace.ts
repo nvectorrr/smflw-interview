@@ -37,7 +37,7 @@ export function useWorkspace() {
     [],
   );
   const workspaceLoading = authLoading || (!!user && teamLoading && !teamState);
-  const workspaceError = !authLoading && !!user && !!teamError;
+  const workspaceError = !authLoading && !!user && !teamState && !!teamError;
 
   useEffect(() => {
     const restoreTab = () => {

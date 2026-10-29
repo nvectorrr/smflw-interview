@@ -18,6 +18,7 @@ type ActivityRecordsProps = {
   teamView: boolean;
   team: TeamState["team"];
   userId: string;
+  onOpenTeam: () => void;
   onSelect: (id: string) => void;
   onOffsetChange: (offset: number) => void;
   onReviewRequested: () => void;
@@ -32,6 +33,7 @@ export function ActivityRecords({
   teamView,
   team,
   userId,
+  onOpenTeam,
   onSelect,
   onOffsetChange,
   onReviewRequested,
@@ -110,12 +112,13 @@ export function ActivityRecords({
       {selected.review ? (
         <ReviewOutcome review={selected.review} />
       ) : (
-        team &&
-        selected.team_id === team.id &&
-        selected.user_id === userId && (
+        selected.user_id === userId &&
+        (!team || selected.team_id === team.id) && (
           <RequestReview
             key={selected.id}
             checkId={selected.id}
+            teamRequired={!team}
+            onOpenTeam={onOpenTeam}
             onRequested={onReviewRequested}
           />
         )
@@ -131,15 +134,7 @@ export function ActivityRecords({
       <div className="activity-workspace">
         <div className="registry-table-wrap">
           <table className="registry-table">
-            <thead>
-              <tr>
-                <th>Image / submitted</th>
-                {teamView && <th>Member</th>}
-                <th>Verdict</th>
-                <th>Review</th>
-                <th>Model</th>
-              </tr>
-            </thead>
+            <RegistryColumns teamView={teamView} />
             <tbody>
               {page.items.map((item) => {
                 const finalVerdict =
@@ -171,7 +166,9 @@ export function ActivityRecords({
                           selectRecord(item.id);
                         }}
                       >
-                        <strong>{item.image_name || item.file_name}</strong>
+                        <strong title={item.image_name || item.file_name}>
+                          {item.image_name || item.file_name}
+                        </strong>
                         <small>
                           {new Date(item.created_at).toLocaleString("en-GB", {
                             dateStyle: "short",
@@ -271,6 +268,96 @@ export function ActivityRecords({
         >
           Next →
         </button>
+      </div>
+    </>
+  );
+}
+
+function RegistryColumns({ teamView }: { teamView: boolean }) {
+  return (
+    <>
+      <colgroup>
+        <col className="registry-image-column" />
+        {teamView && <col className="registry-member-column" />}
+        <col className="registry-verdict-column" />
+        <col className="registry-review-column" />
+        <col className="registry-model-column" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Image / submitted</th>
+          {teamView && <th>Member</th>}
+          <th>Verdict</th>
+          <th>Review</th>
+          <th>Model</th>
+        </tr>
+      </thead>
+    </>
+  );
+}
+
+export function ActivityRecordsSkeleton({ teamView }: { teamView: boolean }) {
+  return (
+    <>
+      <div className="history-heading">
+        <h2>Check registry</h2>
+        <span className="activity-placeholder">Loading records</span>
+      </div>
+      <div className="activity-workspace">
+        <div className="registry-table-wrap">
+          <table className="registry-table">
+            <RegistryColumns teamView={teamView} />
+            <tbody>
+              {[0, 1, 2, 3, 4, 5].map((row) => (
+                <tr key={row}>
+                  <td>
+                    <span className="activity-placeholder">Image name</span>
+                    <small className="activity-placeholder">Submitted at</small>
+                  </td>
+                  {teamView && (
+                    <td>
+                      <span className="activity-placeholder">Member</span>
+                    </td>
+                  )}
+                  <td>
+                    <span className="activity-placeholder">Verdict</span>
+                  </td>
+                  <td>
+                    <span className="activity-placeholder">Review</span>
+                  </td>
+                  <td>
+                    <span className="activity-placeholder">Model</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <aside className="record-inspector activity-inspector-skeleton">
+          <p className="eyebrow">SELECTED RECORD</p>
+          <h2 className="activity-placeholder">Image name</h2>
+          <p className="inspector-filename activity-placeholder">Filename</p>
+          <dl className="inspector-properties">
+            {["AI determination", "Model", "Source", "Submitted"].map(
+              (label) => (
+                <div className="activity-placeholder" key={label}>
+                  {label}
+                </div>
+              ),
+            )}
+          </dl>
+          <p className="history-evidence activity-placeholder">
+            Evidence & provenance
+          </p>
+          <p className="inspector-links activity-placeholder">
+            Download AI certificate
+          </p>
+        </aside>
+      </div>
+      <div className="history-pagination">
+        <button disabled>← Previous</button>
+        <span className="activity-placeholder">Loading records</span>
+        <button disabled>Next →</button>
       </div>
     </>
   );

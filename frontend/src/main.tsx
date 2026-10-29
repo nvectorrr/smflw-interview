@@ -10,6 +10,7 @@ import "./dropdown.css";
 import "./theme.css";
 import "./team-controls.css";
 import "./motion.css";
+import "./workspace-layout.css";
 import { initializeTheme } from "./lib/theme";
 
 initializeTheme();

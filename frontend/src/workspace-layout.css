@@ -1,0 +1,54 @@
+/* Short pages fill the viewport; long pages keep the footer after their content. */
+main.app-shell,main.certificate-verification { display:flex; flex-direction:column; min-height:100svh; }
+main.app-shell > *,main.certificate-verification > * { flex-shrink:0; }
+main.app-shell > footer.app-footer,main.certificate-verification > footer.app-footer { position:relative; flex-shrink:0; margin-top:auto; padding-top:26px; border-top:0; }
+main > footer.app-footer::before { content:""; position:absolute; top:12px; left:0; right:0; height:1px; background:var(--line); }
+.team-clearance-dialog { width:min(520px,calc(100% - 32px)); max-height:calc(100svh - 32px); padding:0; border:1px solid var(--line); border-radius:4px; color:var(--text); background:var(--surface); }
+.team-clearance-dialog::backdrop { background:#0008; }
+.team-clearance-content { padding:28px; }
+.team-clearance-content > .eyebrow { justify-content:flex-start; }
+.team-clearance-content h2 { font-size:26px; font-weight:500; line-height:1.2; letter-spacing:-.6px; margin:20px 0 16px; }
+.team-clearance-content > p:not(.eyebrow) { font-size:13px; line-height:1.7; color:var(--muted); }
+.team-clearance-content .dialog-actions { flex-wrap:wrap; }
+.team-clearance-content .dialog-actions > button { flex:1; }
+.team-clearance-note { border-top:1px solid var(--line); padding-top:16px; }
+@media(max-width:520px) { .team-clearance-content { padding:24px 20px; } .team-clearance-content .dialog-actions { flex-direction:column; } }
+
+/* Review states share a viewport frame; neither notices nor image loading move the footer. */
+main.app-shell.is-review { height:100svh; min-height:760px; }
+main.app-shell.is-review > .review-desk { display:flex; flex-direction:column; flex:1 1 0; min-height:0; padding-top:20px; }
+.review-desk .activity-heading { flex-shrink:0; margin-bottom:12px; }
+.review-desk .activity-heading h1 { font-size:30px; margin:6px 0; }
+.review-desk .subtitle { font-size:12px; line-height:1.5; }
+.review-toolbar { display:grid; grid-template-columns:minmax(0,1fr) minmax(260px,.8fr); gap:24px; align-items:center; flex-shrink:0; }
+.review-toolbar .queue-count { margin:0; padding:0; border:0; line-height:1.6; }
+.review-toolbar .activity-filters { margin:0; padding:10px 12px; }
+.review-feedback { flex:0 0 28px; height:28px; overflow:auto; padding:5px 0; color:var(--muted); font-size:12px; line-height:18px; }
+.review-feedback.has-error { color:var(--text); }
+.review-stage { flex:1 1 0; min-height:0; }
+.review-stage > .review-card,.review-stage > .workspace-empty,.review-stage > .review-skeleton,.review-stage .review-skeleton > .review-card { height:100%; min-height:0; margin:0; }
+.review-stage .review-skeleton-controls { display:none; }
+.review-stage .review-card { overflow:hidden; }
+.review-stage .review-photo { height:100%; min-height:0; }
+.review-stage .review-card-body { display:grid; grid-template-rows:auto auto auto minmax(0,1fr) 20px auto auto; min-height:0; overflow:hidden; padding:18px; }
+.review-stage .review-card h2 { font-size:21px; line-height:1.2; max-height:2.4em; overflow:auto; margin:8px 0; overflow-wrap:anywhere; }
+.review-stage .review-label { margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.review-stage .review-context { font-size:12px; line-height:1.5; margin:0 0 10px; }
+.review-stage .review-evidence { min-height:0; overflow:auto; margin:0; padding:10px 0; }
+.review-stage .review-evidence dd { margin-bottom:10px; }
+.review-stage .review-decisions { margin:0; padding-top:10px; }
+.review-stage .review-decisions button { min-height:44px; }
+.review-stage .review-final-note { margin:10px 0 0; font-size:11px; line-height:1.4; }
+.review-stage .review-skeleton .review-card-body { display:flex; margin:0; }
+.review-stage .review-skeleton .review-card-body aside { width:100%; height:100%; }
+.review-stage > .workspace-empty { padding:24px; overflow:auto; }
+.review-pagination { flex:0 0 44px; min-height:44px; margin:0; padding:8px 0 0; }
+.review-pagination[data-visible="false"] { visibility:hidden; }
+@media(max-width:760px) {
+  main.app-shell.is-review { height:auto; min-height:100svh; }
+  main.app-shell.is-review > .review-desk { flex:0 0 auto; }
+  .review-toolbar { grid-template-columns:1fr; gap:10px; }
+  .review-stage { flex:0 0 580px; height:580px; }
+  .review-stage .review-card { grid-template-columns:1fr; grid-template-rows:220px minmax(0,1fr); }
+  .review-stage .review-card-body { padding:16px; }
+}

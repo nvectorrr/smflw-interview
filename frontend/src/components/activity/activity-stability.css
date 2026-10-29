@@ -1,0 +1,87 @@
+/* Keep async data and the selected record inside the same workspace geometry. */
+.activity .activity-workspace {
+  height: clamp(440px, calc(100dvh - 450px), 680px);
+  min-height: 0;
+}
+
+.activity .registry-table-wrap,
+.activity .activity-workspace > .record-inspector {
+  min-height: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+.activity .registry-table {
+  table-layout: fixed;
+  min-width: 640px;
+}
+
+.activity .registry-image-column {
+  width: auto;
+}
+.activity .registry-member-column {
+  width: 20%;
+}
+.activity .registry-verdict-column {
+  width: 110px;
+}
+.activity .registry-review-column {
+  width: 110px;
+}
+.activity .registry-model-column {
+  width: 140px;
+}
+
+.activity .registry-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.activity .registry-table td {
+  height: 76px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity .registry-select strong,
+.activity .registry-table small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity .activity-placeholder {
+  display: inline-block;
+  max-width: 100%;
+  border-radius: 3px;
+  background: var(--line);
+  color: transparent;
+  font-style: normal;
+  user-select: none;
+  animation: skeleton-pulse 1.6s ease-in-out infinite alternate;
+}
+
+.activity .stat .activity-placeholder {
+  min-width: 2ch;
+}
+.activity .activity-inspector-skeleton .inspector-properties {
+  grid-template-columns: 1fr;
+}
+.activity .activity-inspector-skeleton .inspector-properties > div {
+  width: 80%;
+}
+
+@media (max-width: 1050px) {
+  .activity .activity-inspector-skeleton {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .activity .activity-placeholder {
+    animation: none;
+  }
+}

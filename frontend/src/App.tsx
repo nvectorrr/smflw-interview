@@ -3,10 +3,10 @@ import { useWorkspace } from "./hooks/useWorkspace";
 import { useClassifier } from "./hooks/useClassifier";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { AuthPanel } from "./components/AuthPanel";
-import { ActivityPanel } from "./components/ActivityPanel";
+import { ActivityBootstrap, ActivityPanel } from "./components/ActivityPanel";
 import { CertificateVerification } from "./components/CertificateVerification";
 import { TeamPanel } from "./components/TeamPanel";
-import { ReviewDesk } from "./components/ReviewDesk";
+import { ReviewDesk, ReviewDeskBootstrap } from "./components/ReviewDesk";
 import { Classifier } from "./components/Classifier";
 import { EmptyState, LoadingState } from "./components/WorkspaceState";
 import { Footer } from "./components/Footer";
@@ -32,7 +32,9 @@ function HotDogApp() {
   const classifier = useClassifier(refreshActivity);
 
   return (
-    <main className={`app-shell ${tab === "detect" ? "is-classify" : ""}`}>
+    <main
+      className={`app-shell ${tab === "detect" ? "is-classify" : tab === "review" ? "is-review" : ""}`}
+    >
       <header className="topbar">
         <a className="brand" href="/" aria-label="Hot dog or not — home">
           HD<span>/</span>NOT
@@ -57,8 +59,13 @@ function HotDogApp() {
               classifier={classifier}
               teamId={null}
               onActivityChanged={refreshActivity}
+              onOpenTeam={() => setTab("team")}
               loading
             />
+          ) : tab === "activity" ? (
+            <ActivityBootstrap />
+          ) : tab === "review" ? (
+            <ReviewDeskBootstrap />
           ) : (
             <div className="workspace-bootstrap">
               <div className="bootstrap-heading" aria-hidden="true">
@@ -66,10 +73,7 @@ function HotDogApp() {
                 <i />
                 <i />
               </div>
-              <LoadingState
-                records={tab === "activity"}
-                label="Preparing your workspace…"
-              />
+              <LoadingState label="Preparing your workspace…" />
             </div>
           )}
         </>
@@ -122,6 +126,7 @@ function HotDogApp() {
             classifier={classifier}
             teamId={teamState?.team?.id ?? null}
             onActivityChanged={refreshActivity}
+            onOpenTeam={() => setTab("team")}
           />
           {user ? (
             <ActivityPanel
@@ -132,6 +137,7 @@ function HotDogApp() {
               members={teamState?.members ?? []}
               userId={user.id}
               onClassify={() => setTab("detect")}
+              onOpenTeam={() => setTab("team")}
             />
           ) : (
             tab === "activity" && (

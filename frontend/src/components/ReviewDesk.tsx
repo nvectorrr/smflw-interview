@@ -13,6 +13,36 @@ export function ReviewDesk({
   revision: number;
   onDecision: () => void;
 }) {
+  const queue = useReviewQueue(revision, onDecision);
+  return <ReviewDeskView queue={queue} />;
+}
+
+export function ReviewDeskBootstrap() {
+  return (
+    <ReviewDeskView
+      queue={{
+        page: null,
+        item: undefined,
+        offset: 0,
+        loading: true,
+        refreshing: true,
+        busy: false,
+        error: "",
+        lastDecision: null,
+        refresh: async () => {},
+        decide: async () => {},
+        select: () => {},
+        changePage: () => {},
+      }}
+    />
+  );
+}
+
+export function ReviewDeskView({
+  queue,
+}: {
+  queue: ReturnType<typeof useReviewQueue>;
+}) {
   const {
     page,
     item,
@@ -25,8 +55,8 @@ export function ReviewDesk({
     decide,
     select,
     changePage,
-  } = useReviewQueue(revision, onDecision);
-
+  } = queue;
+  const paginated = !!page && page.total > page.limit;
   return (
     <section
       className="review-desk"
@@ -56,87 +86,120 @@ export function ReviewDesk({
           )}
         </button>
       </div>
-      {error && (
-        <p className="error" role="alert">
-          {error}
+      <div className="review-toolbar">
+        <p className="queue-count">
+          {loading
+            ? "Loading the shared queue…"
+            : page
+              ? `${page.total} pending ${page.total === 1 ? "review" : "reviews"} available to you · Updates automatically.`
+              : "Queue temporarily unavailable."}
         </p>
-      )}
-      {lastDecision && (
-        <div className="review-saved" role="status">
-          <span>
-            Decision saved ·{" "}
-            {lastDecision.is_hot_dog ? "Hot dog" : "Not hot dog"}.
-          </span>
-        </div>
-      )}
-      {loading ? (
-        <LoadingState review label="Loading the review queue…" />
-      ) : item && page ? (
-        <>
-          <p className="queue-count">
-            {page.total} pending {page.total === 1 ? "review" : "reviews"}{" "}
-            available to you · Updates automatically.
-          </p>
-          <div className="activity-filters">
-            <div className="activity-filter">
-              <span>Choose a request</span>
-              <SelectDropdown
-                value={item.id}
-                onChange={select}
-                label="Review request"
-                disabled={busy}
-                options={page.items.map((request) => ({
-                  value: request.id,
-                  label:
-                    request.image_name || request.file_name || "Untitled photo",
-                  description: request.submitter_name || "A teammate",
-                }))}
-              />
-            </div>
+        <div className="activity-filters">
+          <div className="activity-filter">
+            <span>Choose a request</span>
+            <SelectDropdown
+              value={item?.id ?? ""}
+              onChange={select}
+              label="Review request"
+              disabled={busy || loading || !item}
+              options={
+                item && page
+                  ? page.items.map((request) => ({
+                      value: request.id,
+                      label:
+                        request.image_name ||
+                        request.file_name ||
+                        "Untitled photo",
+                      description: request.submitter_name || "A teammate",
+                    }))
+                  : [
+                      {
+                        value: "",
+                        label: loading
+                          ? "Loading requests…"
+                          : error
+                            ? "Queue unavailable"
+                            : "No pending requests",
+                      },
+                    ]
+              }
+            />
           </div>
+        </div>
+      </div>
+      <div
+        className={`review-feedback ${error ? "has-error" : ""}`}
+        role={error ? "alert" : "status"}
+      >
+        {error ||
+          (lastDecision
+            ? `Decision saved · ${lastDecision.is_hot_dog ? "Hot dog" : "Not hot dog"}.`
+            : "")}
+      </div>
+      <div className="review-stage">
+        {loading ? (
+          <LoadingState review label="Loading the review queue…" />
+        ) : item && page ? (
           <ReviewCard
             key={`${item.id}:${item.image_url}`}
             item={item}
             busy={busy}
             onDecide={decide}
           />
-        </>
-      ) : (
-        !error && (
+        ) : (
           <EmptyState
             kind="review"
-            title="All caught up"
-            description="There are no pending requests from other team members. New requests will appear here automatically."
-          />
-        )
-      )}
-      {page && page.total > page.limit && (
-        <nav className="history-pagination" aria-label="Review queue pages">
-          <button
-            type="button"
-            disabled={busy || loading || refreshing || page.offset === 0}
-            onClick={() => changePage(Math.max(0, page.offset - page.limit))}
-          >
-            ← Previous
-          </button>
-          <span>
-            Page {Math.floor(page.offset / page.limit) + 1} of{" "}
-            {Math.ceil(page.total / page.limit)}
-          </span>
-          <button
-            type="button"
-            disabled={
-              busy ||
-              loading ||
-              refreshing ||
-              page.offset + page.limit >= page.total
+            title={error ? "Queue unavailable" : "All caught up"}
+            description={
+              error ||
+              "There are no pending requests from other team members. New requests will appear here automatically."
             }
-            onClick={() => changePage(page.offset + page.limit)}
-          >
-            Next →
-          </button>
-        </nav>
-      )}
+          />
+        )}
+      </div>
+      <nav
+        className="history-pagination review-pagination"
+        aria-label="Review queue pages"
+        aria-hidden={!paginated}
+        inert={!paginated}
+        data-visible={paginated}
+      >
+        <button
+          type="button"
+          disabled={
+            !paginated ||
+            busy ||
+            loading ||
+            refreshing ||
+            !page ||
+            page.offset === 0
+          }
+          onClick={() =>
+            page && changePage(Math.max(0, page.offset - page.limit))
+          }
+        >
+          ← Previous
+        </button>
+        <span>
+          {page
+            ? `Page ${Math.floor(page.offset / page.limit) + 1} of ${Math.max(1, Math.ceil(page.total / page.limit))}`
+            : "Page 1 of 1"}
+        </span>
+        <button
+          type="button"
+          disabled={
+            !paginated ||
+            busy ||
+            loading ||
+            refreshing ||
+            !page ||
+            page.offset + page.limit >= page.total
+          }
+          onClick={() => page && changePage(page.offset + page.limit)}
+        >
+          Next →
+        </button>
+      </nav>
     </section>
   );
 }

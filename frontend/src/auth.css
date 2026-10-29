@@ -27,3 +27,6 @@
 .delete-account .auth-field { font-size: 11px; }
 .delete-account .danger { background: #963a29; }
 .delete-account .danger:disabled { background: #e6ddd6; color: #a89a91; }
+
+.password-change { border-top: 1px solid var(--line); margin-top: 28px; padding-top: 24px; }
+.password-change h3 { font-size: 13px; margin: 0 0 18px; }

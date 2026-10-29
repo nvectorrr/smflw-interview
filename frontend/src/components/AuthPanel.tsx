@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useAuth } from "../lib/auth";
 import { deleteAccountData } from "../lib/api";
 import { supabase } from "../lib/supabase";
+import { passwordChangeError } from "../lib/password";
 import "../auth.css";
 
 function errorMessage(cause: unknown) {
@@ -31,13 +32,19 @@ export function AuthPanel({
   triggerLabel?: string;
 }) {
   const titleId = useId();
+  const passwordTitleId = useId();
   const { user, loading } = useAuth();
   const dialog = useRef<HTMLDialogElement>(null);
+  const passwordRequestVersion = useRef(0);
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordNotice, setPasswordNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -51,6 +58,15 @@ export function AuthPanel({
     if (open) dialog.current?.showModal();
     else dialog.current?.close();
   }, [open]);
+
+  useEffect(() => {
+    passwordRequestVersion.current += 1;
+    setPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setPasswordError("");
+    setPasswordNotice("");
+  }, [open, user?.id]);
 
   function show() {
     setConfirmation("");
@@ -119,7 +135,41 @@ export function AuthPanel({
     }
   }
 
+  async function changePassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (busy || !user) return;
+    setPasswordNotice("");
+    const validationError = passwordChangeError(newPassword, confirmPassword);
+    setPasswordError(validationError);
+    if (validationError) return;
+    const requestVersion = passwordRequestVersion.current;
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+      if (requestVersion !== passwordRequestVersion.current) return;
+      if (error) throw error;
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordNotice("Password changed.");
+    } catch (cause) {
+      if (requestVersion !== passwordRequestVersion.current) return;
+      setPasswordError(
+        cause &&
+          typeof cause === "object" &&
+          "code" in cause &&
+          cause.code === "reauthentication_needed"
+          ? "For security, sign out and sign in again before changing your password."
+          : errorMessage(cause),
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function logout() {
+    if (busy) return;
     setBusy(true);
     setError("");
     setNotice("");
@@ -163,7 +213,7 @@ export function AuthPanel({
       <button
         className={triggerClassName}
         type="button"
-        disabled={loading}
+        disabled={loading || busy}
         onClick={show}
         aria-haspopup="dialog"
       >
@@ -285,6 +335,62 @@ export function AuthPanel({
                 )}
               </button>
             </form>
+            {user && (
+              <section
+                className="password-change"
+                aria-labelledby={passwordTitleId}
+              >
+                <h3 id={passwordTitleId}>Change password</h3>
+                <form onSubmit={changePassword} aria-busy={busy}>
+                  <label className="auth-field">
+                    New password
+                    <input
+                      type="password"
+                      autoComplete="new-password"
+                      minLength={6}
+                      required
+                      value={newPassword}
+                      disabled={busy}
+                      onChange={(event) => setNewPassword(event.target.value)}
+                    />
+                    <span className="auth-hint">At least 6 characters.</span>
+                  </label>
+                  <label className="auth-field">
+                    Confirm new password
+                    <input
+                      type="password"
+                      autoComplete="new-password"
+                      minLength={6}
+                      required
+                      value={confirmPassword}
+                      disabled={busy}
+                      onChange={(event) =>
+                        setConfirmPassword(event.target.value)
+                      }
+                    />
+                  </label>
+                  {passwordError && (
+                    <p className="auth-error" role="alert">
+                      {passwordError}
+                    </p>
+                  )}
+                  {passwordNotice && (
+                    <p className="auth-notice" role="status">
+                      {passwordNotice}
+                    </p>
+                  )}
+                  <button className="button" disabled={busy} type="submit">
+                    {busy ? (
+                      <>
+                        <Spinner /> One moment…
+                      </>
+                    ) : (
+                      "Change password ↗"
+                    )}
+                  </button>
+                </form>
+              </section>
+            )}
             {user ? (
               <button
                 className="auth-switch"

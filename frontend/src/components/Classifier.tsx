@@ -12,6 +12,7 @@ type ClassifierProps = {
   classifier: ReturnType<typeof useClassifier>;
   teamId: string | null;
   onActivityChanged: () => void;
+  onOpenTeam: () => void;
 };
 
 export function Classifier({
@@ -20,6 +21,7 @@ export function Classifier({
   classifier,
   teamId,
   onActivityChanged,
+  onOpenTeam,
 }: ClassifierProps) {
   const {
     file,
@@ -111,12 +113,13 @@ export function Classifier({
             <CertificatePanel certificateId={certificate.certificate_id} />
           )}
           {certificate?.check_id &&
-            teamId &&
-            certificate.team_id === teamId && (
+            (!teamId || certificate.team_id === teamId) && (
               <RequestReview
                 key={certificate.check_id}
                 checkId={certificate.check_id}
                 onRequested={onActivityChanged}
+                teamRequired={!teamId}
+                onOpenTeam={onOpenTeam}
               />
             )}
           {phase === "done" ? (

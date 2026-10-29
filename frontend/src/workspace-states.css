@@ -70,13 +70,11 @@ html { scrollbar-gutter:stable; }
 .bootstrap-heading > i:first-child { width:160px; height:10px; }
 .bootstrap-heading > i:nth-child(2) { width:min(300px,75%); height:44px; }
 .bootstrap-heading > i:last-child { width:min(480px,90%); height:20px; }
-.classifier-loading .picker label,.classifier-loading .verdict-pane > :not(.step-label) { visibility:hidden; }
 .classifier-loading .picker { border-style:solid; border-color:var(--line); background:linear-gradient(100deg,var(--surface-subtle) 25%,var(--surface) 45%,var(--surface-subtle) 65%); background-size:250% 100%; animation:skeleton-shimmer 1.8s ease-in-out infinite; }
 .classifier-loading .verdict-pane { position:relative; }
-.classifier-loading .verdict-pane::after { content:""; position:absolute; inset:90px 24px 40px; background:linear-gradient(var(--line),var(--line)) left top / 100% 60px no-repeat,linear-gradient(var(--line),var(--line)) center 53% / 55% 24px no-repeat,linear-gradient(var(--line),var(--line)) center 65% / 70% 12px no-repeat,linear-gradient(var(--line),var(--line)) left bottom / 100% 38px no-repeat; animation:skeleton-pulse 1.6s ease-in-out infinite alternate; pointer-events:none; }
 .review-save-status { min-height:20px; font-size:12px; color:var(--muted); }
 .activity-heading > .activity-refresh { min-width:118px; }
-.source-meta-slot { min-height:108px; flex-shrink:0; }
+.source-meta-slot { flex-shrink:0; }
 @keyframes skeleton-pulse { from { opacity:.4; } to { opacity:.8; } }
 @media(max-width:760px) { .app-tabs { min-height:49px; } }
 @media(prefers-reduced-motion:reduce) { .navigation-skeleton > span,.classifier-loading .picker,.classifier-loading .verdict-pane::after { animation:none; } }
@@ -87,3 +85,17 @@ html { scrollbar-gutter:stable; }
 .review-skeleton .skeleton-panel aside { min-height:100%; }
 .skeleton-fill { background:linear-gradient(100deg,var(--surface-subtle) 25%,var(--surface) 45%,var(--surface-subtle) 65%); background-size:250% 100%; animation:skeleton-shimmer 1.8s ease-in-out infinite; }
 @media(prefers-reduced-motion:reduce) { .skeleton-fill { animation:none; } }
+
+/* Skeletons mask the real controls, retaining their final dimensions. */
+.classifier-loading .model-selector label > span { visibility:hidden; }
+.classifier-loading .model-selector input { visibility:hidden; }
+.classifier-loading .model-selector label { background:var(--surface-subtle); }
+.classifier-loading .model-selector legend,
+.classifier-loading .verdict h2,
+.classifier-loading .verdict > p,
+.classifier-loading .empty-picker strong,
+.classifier-loading .empty-picker > span:last-child { color:transparent; background:var(--line); border-radius:3px; }
+.classifier-loading .empty-picker u { color:transparent; text-decoration:none; }
+.classifier-loading .empty-picker .upload-icon,
+.classifier-loading .verdict .state-icon { color:transparent; background:var(--line); border-color:transparent; }
+.classifier-loading .verdict-pane > .button { color:transparent; background:var(--line); }

@@ -1,7 +1,7 @@
 import { Footer } from "./Footer";
 import { ThemeToggle } from "./ThemeToggle";
 import { Spinner } from "./WorkspaceState";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import "../certificates.css";
 import "../verification-layout.css";
 import { CertificateDownload } from "./CertificatePanel";
@@ -136,6 +136,15 @@ export function CertificateVerification({
 
   const record = state.kind === "verified" ? state.record : null;
   const human = record?.schema_version === 2;
+  const loading = state.kind === "loading";
+  const value = (content: ReactNode) =>
+    loading ? (
+      <span className="verification-placeholder" aria-hidden="true">
+        <span>{content}</span>
+      </span>
+    ) : (
+      content
+    );
   async function compareFile(file?: File) {
     if (!file || !record) return;
     const version = ++comparisonVersion.current;
@@ -194,11 +203,12 @@ export function CertificateVerification({
         </section>
         <section
           className={`certificate-verification-card ${record ? "is-verified" : ""}`}
-          aria-busy={state.kind === "loading"}
+          aria-busy={loading}
         >
           <div className="verification-status" role="status" aria-live="polite">
-            {state.kind === "loading" ? (
-              <span className="verification-spinner">
+            {loading && <span className="sr-only">{title}</span>}
+            {loading ? (
+              <span className="verification-spinner" aria-hidden="true">
                 <Spinner />
               </span>
             ) : (
@@ -210,74 +220,73 @@ export function CertificateVerification({
               </span>
             )}
             <div className="verification-status-copy">
-              <h2>{title}</h2>
+              <h2>{value(loading ? "Certificate verified." : title)}</h2>
               <p>
-                {record
-                  ? "The record was found and its stored data integrity is confirmed."
-                  : state.kind === "missing"
-                    ? "There is no certificate with this identifier."
-                    : state.kind === "invalid"
-                      ? "The identifier or certificate data could not be verified."
-                      : state.kind === "error"
-                        ? "The service is temporarily unavailable. Please refresh the page shortly."
-                        : "Matching this identifier against the stored certificate."}
+                {value(
+                  record || loading
+                    ? "The record was found and its stored data integrity is confirmed."
+                    : state.kind === "missing"
+                      ? "There is no certificate with this identifier."
+                      : state.kind === "invalid"
+                        ? "The identifier or certificate data could not be verified."
+                        : state.kind === "error"
+                          ? "The service is temporarily unavailable. Please refresh the page shortly."
+                          : "Matching this identifier against the stored certificate.",
+                )}
               </p>
             </div>
           </div>
-          {state.kind === "loading" && (
-            <div className="verification-loading" aria-hidden="true">
-              <div className="skeleton-layout">
-                <div className="skeleton-records">
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <div key={i}>
-                      <i />
-                      <i />
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="skeleton-fill" />
-            </div>
-          )}
-          {record && (
-            <div className="verification-record-layout">
+          {(loading || record) && (
+            <div
+              className="verification-record-layout"
+              aria-hidden={loading || undefined}
+            >
               <div className="verification-evidence">
                 <dl className="certificate-evidence">
                   <div>
                     <dt>Certificate</dt>
                     <dd>
-                      <code>{record.certificate_id}</code>
+                      <code>
+                        {value(record?.certificate_id ?? certificateId)}
+                      </code>
                     </dd>
                   </div>
                   <div>
                     <dt>Issued (UTC)</dt>
                     <dd>
-                      {new Date(record.issued_at)
-                        .toISOString()
-                        .replace("T", " ")
-                        .replace("Z", " UTC")}
+                      {value(
+                        record
+                          ? new Date(record.issued_at)
+                              .toISOString()
+                              .replace("T", " ")
+                              .replace("Z", " UTC")
+                          : "0000-00-00 00:00:00.000 UTC",
+                      )}
                     </dd>
                   </div>
                   <div>
                     <dt>{human ? "Human reviewer" : "Inspector"}</dt>
                     <dd>
-                      {human
-                        ? record.reviewer_name || "Authorized team supervisor"
-                        : modelLabel(record.classifier_model)}
+                      {value(
+                        human
+                          ? record?.reviewer_name ||
+                              "Authorized team supervisor"
+                          : modelLabel(record?.classifier_model ?? "sonnet"),
+                      )}
                     </dd>
                   </div>
                   {human && (
                     <>
-                      <div>
+                      <div className="verification-human-reference">
                         <dt>Original AI certificate</dt>
                         <dd>
-                          <code>{record.original_certificate_id}</code>
+                          <code>{record?.original_certificate_id}</code>
                         </dd>
                       </div>
-                      <div>
+                      <div className="verification-human-reference">
                         <dt>Review</dt>
                         <dd>
-                          <code>{record.review_id}</code>
+                          <code>{record?.review_id}</code>
                         </dd>
                       </div>
                     </>
@@ -285,17 +294,23 @@ export function CertificateVerification({
                   <div>
                     <dt>Original photo SHA-256</dt>
                     <dd>
-                      <code>{record.image_sha256}</code>
+                      <code>
+                        {value(record?.image_sha256 ?? "0".repeat(64))}
+                      </code>
                     </dd>
                   </div>
                 </dl>
                 <p className="certificate-verification-note">
-                  Compare your file’s SHA-256 with the value above. A match
-                  confirms that the verdict belongs to this photo.{" "}
-                  {human
-                    ? record.human_statement ||
-                      "A human team reviewer made this final decision. The original AI verdict is preserved in its own certificate."
-                    : "The original AI determination is preserved in the certificate."}
+                  {value(
+                    <>
+                      Compare your file’s SHA-256 with the value above. A match
+                      confirms that the verdict belongs to this photo.{" "}
+                      {human
+                        ? record?.human_statement ||
+                          "A human team reviewer made this final decision. The original AI verdict is preserved in its own certificate."
+                        : "The original AI determination is preserved in the certificate."}
+                    </>,
+                  )}
                 </p>
               </div>
               <aside
@@ -304,12 +319,18 @@ export function CertificateVerification({
               >
                 <div className="certificate-verified-verdict">
                   <span>
-                    {human ? "FINAL HUMAN VERDICT" : "ORIGINAL AI VERDICT"}
+                    {value(
+                      human ? "FINAL HUMAN VERDICT" : "ORIGINAL AI VERDICT",
+                    )}
                   </span>
                   <strong>
-                    {record.is_hot_dog ? "Hot dog." : "Not hot dog."}
+                    {value(record?.is_hot_dog ? "Hot dog." : "Not hot dog.")}
                   </strong>
-                  <code>is_hot_dog = {String(record.is_hot_dog)}</code>
+                  <code>
+                    {value(
+                      `is_hot_dog = ${String(record?.is_hot_dog ?? false)}`,
+                    )}
+                  </code>
                 </div>
                 <div className="certificate-file-check">
                   <label
@@ -326,13 +347,13 @@ export function CertificateVerification({
                     <button
                       className="activity-refresh"
                       type="button"
-                      disabled={fileCheck?.status === "checking"}
+                      disabled={loading || fileCheck?.status === "checking"}
                       onClick={() => fileInput.current?.click()}
                     >
-                      Choose image
+                      {value("Choose image")}
                     </button>
                     <span className="compare-file-name" title={fileCheck?.name}>
-                      {fileCheck?.name || "No file selected"}
+                      {value(fileCheck?.name || "No file selected")}
                     </span>
                   </div>
                   <input
@@ -342,7 +363,7 @@ export function CertificateVerification({
                     id="certificate-compare-file"
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
-                    disabled={fileCheck?.status === "checking"}
+                    disabled={loading || fileCheck?.status === "checking"}
                     onChange={(event) => {
                       void compareFile(event.target.files?.[0]);
                       event.target.value = "";
@@ -367,9 +388,19 @@ export function CertificateVerification({
                     </p>
                   )}
                 </div>
-                <CertificateDownload certificateId={certificateId}>
-                  Download PDF ↓
-                </CertificateDownload>
+                {loading ? (
+                  <button
+                    className="button certificate-download"
+                    type="button"
+                    disabled
+                  >
+                    {value("Download PDF ↓")}
+                  </button>
+                ) : (
+                  <CertificateDownload certificateId={certificateId}>
+                    Download PDF ↓
+                  </CertificateDownload>
+                )}
               </aside>
             </div>
           )}

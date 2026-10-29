@@ -10,7 +10,7 @@
 .certificate-verification .verification-status p { margin:0; font-size:12px; }
 .certificate-verification .certificate-verification-symbol,.certificate-verification .verification-spinner { display:grid; place-items:center; flex-shrink:0; width:42px; height:42px; margin:0; border:1px solid var(--line); border-radius:3px; font-size:25px; background:var(--surface-subtle); }
 .certificate-verification .verification-spinner .inline-spinner { width:20px; height:20px; margin:0; }
-.verification-record-layout,.verification-loading { display:grid; grid-template-columns:minmax(0,1fr) 320px; }
+.verification-record-layout { display:grid; grid-template-columns:minmax(0,1fr) 320px; }
 .verification-evidence { min-width:0; padding:12px 28px 24px; }
 .verification-actions { min-width:0; padding:24px; border-left:1px solid var(--line); background:var(--surface-subtle); }
 .certificate-verification .certificate-evidence > div { grid-template-columns:145px minmax(0,1fr); gap:16px; padding:16px 0; }
@@ -24,17 +24,15 @@
 .certificate-verification .certificate-verification-note { margin-bottom:0; }
 .certificate-verification .certificate-verification-card > .certificate-record-link { margin:0; padding:18px 28px; width:100%; border-top:1px solid var(--line); text-align:left; font-size:12px; }
 .certificate-verification .certificate-verification-card > .activity-refresh { margin:24px 28px; }
-.verification-loading { min-height:420px; padding:24px 28px; gap:32px; }
-.verification-loading .skeleton-layout { margin:0; }
-.verification-loading .skeleton-records { margin:0; }
-.verification-loading .skeleton-records > div { grid-template-columns:1fr 2fr; }
-.verification-loading > .skeleton-fill { border-radius:3px; }
+/* Pending values occupy the same wrapping text slots as the loaded record. */
+.verification-placeholder { border-radius:2px; background:var(--line); box-decoration-break:clone; -webkit-box-decoration-break:clone; }
+.verification-placeholder > span { visibility:hidden; }
+.certificate-verification .certificate-evidence > .verification-human-reference { padding-block:10px; }
 @media(max-width:800px) {
-  .verification-record-layout,.verification-loading { grid-template-columns:1fr; }
+  .verification-record-layout { grid-template-columns:1fr; }
   .verification-actions { grid-row:1; border-left:0; border-bottom:1px solid var(--line); }
   .certificate-verification .verification-status { padding:20px; align-items:flex-start; }
   .verification-evidence { padding:8px 20px 24px; }
   .certificate-verification .certificate-evidence > div { grid-template-columns:1fr; gap:6px; }
   .certificate-verification .verification-workspace > .intro { padding-top:24px; }
-  .verification-loading > .skeleton-fill { min-height:160px; grid-row:1; }
 }
