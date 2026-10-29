@@ -47,7 +47,13 @@ export function ReviewDesk({
           disabled={refreshing || busy}
           onClick={() => void refresh(true)}
         >
-          Refresh ↻
+          {refreshing ? (
+            <>
+              <Spinner /> Refreshing…
+            </>
+          ) : (
+            "Refresh ↻"
+          )}
         </button>
       </div>
       {error && (
@@ -64,7 +70,7 @@ export function ReviewDesk({
         </div>
       )}
       {loading ? (
-        <LoadingState label="Loading the review queue…" />
+        <LoadingState review label="Loading the review queue…" />
       ) : item && page ? (
         <>
           <p className="queue-count">
@@ -93,7 +99,6 @@ export function ReviewDesk({
             item={item}
             busy={busy}
             onDecide={decide}
-            onRefresh={() => void refresh(true)}
           />
         </>
       ) : (
@@ -102,11 +107,7 @@ export function ReviewDesk({
             kind="review"
             title="All caught up"
             description="There are no pending requests from other team members. New requests will appear here automatically."
-          >
-            <button className="activity-refresh" onClick={() => void refresh()}>
-              Check for requests ↻
-            </button>
-          </EmptyState>
+          />
         )
       )}
       {page && page.total > page.limit && (
@@ -144,12 +145,10 @@ function ReviewCard({
   item,
   busy,
   onDecide,
-  onRefresh,
 }: {
   item: ReviewItem;
   busy: boolean;
   onDecide: (isHotDog: boolean) => Promise<void>;
-  onRefresh: () => void;
 }) {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -165,15 +164,12 @@ function ReviewCard({
           <EmptyState
             kind="image"
             title="Image unavailable"
-            description="The private photo link may have expired."
-          >
-            <button className="activity-refresh" onClick={onRefresh}>
-              Refresh photo ↻
-            </button>
-          </EmptyState>
+            description="The private photo link may have expired. Refresh the queue to retrieve a new link."
+          />
         ) : (
           <img
             src={item.image_url}
+            data-ready={imageLoaded}
             alt={`Photo submitted for review: ${item.image_name || item.file_name || "Untitled photo"}`}
             onLoad={() => setImageLoaded(true)}
             onError={() => {
@@ -209,7 +205,9 @@ function ReviewCard({
             <code>{item.id}</code>
           </dd>
         </dl>
-        {busy && <LoadingState compact label="Saving your determination…" />}
+        <div className="review-save-status" role="status">
+          {busy ? "Saving your determination…" : ""}
+        </div>
         <div className="review-decisions">
           <button
             className="review-no"

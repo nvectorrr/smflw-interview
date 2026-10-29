@@ -1,0 +1,80 @@
+body:has(.record-dialog[open]) {
+  overflow: hidden;
+}
+
+.record-dialog {
+  width: min(720px, 100%);
+  max-width: 100%;
+  max-height: calc(100dvh - 32px);
+  margin: auto auto 0;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  background: var(--surface-subtle);
+  color: var(--text);
+  box-shadow: 0 -12px 48px #0003;
+}
+
+.record-dialog::backdrop {
+  background: #0008;
+  backdrop-filter: blur(4px);
+}
+
+.record-dialog-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-subtle);
+}
+
+.record-dialog-header h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.record-dialog-close {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.record-dialog-close span {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.record-dialog .record-dialog-content {
+  border: 0;
+  padding: 20px 20px calc(24px + env(safe-area-inset-bottom));
+}
+
+.record-dialog .inspector-properties {
+  grid-template-columns: minmax(100px, 0.8fr) minmax(0, 1fr);
+}
+
+@media (max-width: 1050px) {
+  .registry-table tbody tr {
+    cursor: pointer;
+  }
+
+  .registry-select {
+    min-height: 44px;
+  }
+}

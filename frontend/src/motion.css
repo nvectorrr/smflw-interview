@@ -1,0 +1,85 @@
+/* Browsers without discrete transitions keep the native instant close. */
+@supports (transition-behavior: allow-discrete) and (overlay: auto) {
+  dialog {
+    opacity: 0;
+    transform: translateY(12px) scale(.98);
+    transition: opacity .18s ease, transform .18s ease, display .18s allow-discrete, overlay .18s allow-discrete;
+  }
+
+  dialog:not([open]) {
+    pointer-events: none;
+  }
+
+  dialog[open] {
+    opacity: 1;
+    transform: none;
+  }
+
+  dialog::backdrop {
+    opacity: 0;
+    transition: opacity .18s ease, display .18s allow-discrete, overlay .18s allow-discrete;
+  }
+
+  dialog[open]::backdrop {
+    opacity: 1;
+  }
+
+  @starting-style {
+    dialog[open] {
+      opacity: 0;
+      transform: translateY(12px) scale(.98);
+    }
+
+    dialog[open]::backdrop {
+      opacity: 0;
+    }
+  }
+}
+
+@supports (interpolate-size: allow-keywords) and selector(::details-content) {
+  details::details-content {
+    interpolate-size: allow-keywords;
+    block-size: 0;
+    opacity: 0;
+    overflow: clip;
+    transition: block-size .18s ease, opacity .18s ease, content-visibility .18s allow-discrete;
+  }
+
+  details[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+  }
+}
+
+:is(.classifier-content:not([hidden]), .activity:not([hidden]), .team-section, .review-desk, .result-verdict, .certificate-panel, .human-review, .team-notice, .review-saved, .auth-notice) {
+  animation: panel-appear .18s ease;
+}
+
+:is(.app-tabs button, .select-trigger, .select-options > button, .activity-refresh, .history-pagination button, .privacy-trigger, .privacy-close) {
+  transition: color .15s ease, background-color .15s ease, border-color .15s ease;
+}
+
+@keyframes panel-appear {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog,
+  dialog::backdrop,
+  :is(.app-tabs button, .select-trigger, .select-options > button, .activity-refresh, .history-pagination button, .privacy-trigger, .privacy-close) {
+    transition: none;
+  }
+
+  details::details-content {
+    transition: none;
+  }
+
+  :is(.classifier-content:not([hidden]), .activity:not([hidden]), .team-section, .review-desk, .result-verdict, .certificate-panel, .human-review, .team-notice, .review-saved, .auth-notice) {
+    animation: none;
+  }
+}
+
+.review-photo img[data-ready] { opacity:0; transition:opacity .2s ease; }
+.review-photo img[data-ready="true"] { opacity:1; }
+@media (prefers-reduced-motion:reduce) { .review-photo img[data-ready] { transition:none; } }

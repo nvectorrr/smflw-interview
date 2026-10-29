@@ -30,6 +30,32 @@ def _delete_keys(client, bucket: str, keys: list[str]) -> None:
 def cleanup_user_assets(settings: Settings, user_id: UUID) -> None:
     """Delete tracked and untracked assets; safe to repeat after account deletion."""
     with closing(get_s3_client(settings)) as client:
+        # A reviewer can have named PDFs in another submitter's account.
+        offset = 0
+        while True:
+            reviews = repository._execute(
+                repository._client(settings)
+                .table("hdn_reviews")
+                .select("certificate_id,user_id")
+                .eq("reviewer_id", str(user_id))
+                .eq("status", "completed")
+                .order("id")
+                .range(offset, offset + 499)
+            ).data
+            keys = []
+            for review in reviews:
+                prefix = (
+                    f"certificates/{UUID(review['user_id'])}/"
+                    f"{UUID(review['certificate_id'])}"
+                )
+                keys.extend(
+                    f"{prefix}{suffix}"
+                    for suffix in (".pdf", ".design-v2.pdf", ".design-v3.pdf")
+                )
+            _delete_keys(client, settings.image_bucket, keys)
+            if len(reviews) < 500:
+                break
+            offset += 500
         for prefix in (f"uploads/{user_id}/", f"certificates/{user_id}/"):
             pages = client.get_paginator("list_objects_v2").paginate(
                 Bucket=settings.image_bucket, Prefix=prefix

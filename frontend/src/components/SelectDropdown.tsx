@@ -184,42 +184,44 @@ export function SelectDropdown<Value extends string>({
           </svg>
         </span>
       </button>
-      {open && (
-        <div
-          className="select-options"
-          ref={menu}
-          style={position}
-          id={id}
-          role="listbox"
-          aria-label={label}
-        >
-          {options.map((option, index) => (
-            <button
-              key={option.value}
-              ref={(element) => {
-                items.current[index] = element;
-              }}
-              type="button"
-              role="option"
-              aria-selected={value === option.value}
-              tabIndex={active === index ? 0 : -1}
-              onFocus={() => setActive(index)}
-              onClick={() => {
-                close();
-                if (option.value !== value) onChange(option.value);
-              }}
-            >
-              <span className="select-option-copy">
-                <strong>{option.label}</strong>
-                {option.description && <small>{option.description}</small>}
-              </span>
-              <span className="select-check" aria-hidden="true">
-                {value === option.value ? "✓" : ""}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
+      <div
+        className="select-options"
+        data-open={open}
+        data-side={position.bottom === undefined ? "bottom" : "top"}
+        inert={!open}
+        aria-hidden={!open}
+        ref={menu}
+        style={position}
+        id={id}
+        role="listbox"
+        aria-label={label}
+      >
+        {options.map((option, index) => (
+          <button
+            key={option.value}
+            ref={(element) => {
+              items.current[index] = element;
+            }}
+            type="button"
+            role="option"
+            aria-selected={value === option.value}
+            tabIndex={open && active === index ? 0 : -1}
+            onFocus={() => setActive(index)}
+            onClick={() => {
+              close();
+              if (option.value !== value) onChange(option.value);
+            }}
+          >
+            <span className="select-option-copy">
+              <strong>{option.label}</strong>
+              {option.description && <small>{option.description}</small>}
+            </span>
+            <span className="select-check" aria-hidden="true">
+              {value === option.value ? "✓" : ""}
+            </span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

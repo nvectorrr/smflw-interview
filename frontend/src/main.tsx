@@ -9,6 +9,7 @@ import "./classifier-layout.css";
 import "./dropdown.css";
 import "./theme.css";
 import "./team-controls.css";
+import "./motion.css";
 import { initializeTheme } from "./lib/theme";
 
 initializeTheme();

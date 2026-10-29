@@ -33,11 +33,12 @@ export function TeamPanel({
 }) {
   const { user } = useAuth();
   const [removing, setRemoving] = useState<TeamMember | null>(null);
+  const [removeOpen, setRemoveOpen] = useState(false);
   const removeDialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
-    if (removing) removeDialog.current?.showModal();
+    if (removeOpen) removeDialog.current?.showModal();
     else removeDialog.current?.close();
-  }, [removing]);
+  }, [removeOpen]);
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [role, setRole] = useState<TeamRole>("user");
@@ -174,7 +175,15 @@ export function TeamPanel({
             disabled={loading || busy}
             onClick={onRefresh}
           >
-            Refresh ↻
+            {loading || busy ? (
+              <>
+                <Spinner /> Updating…
+              </>
+            ) : loadError ? (
+              "Try again ↻"
+            ) : (
+              "Refresh ↻"
+            )}
           </button>
         )}
       </div>
@@ -183,13 +192,9 @@ export function TeamPanel({
           title="Team unavailable"
           description={loadError}
           kind="team"
-        >
-          <button className="activity-refresh" onClick={onRefresh}>
-            Try again ↻
-          </button>
-        </EmptyState>
+        />
       )}
-      {error && !removing && (
+      {error && !removeOpen && (
         <p className="error" role="alert">
           {error}
         </p>
@@ -199,10 +204,6 @@ export function TeamPanel({
           {notice}
         </p>
       )}
-      {busy && !removing && (
-        <LoadingState compact label="Updating your workspace…" />
-      )}
-      {loading && state && <LoadingState compact label="Refreshing team…" />}
       {loading && !state ? (
         <LoadingState label="Loading team configuration…" />
       ) : !user ? (
@@ -266,6 +267,7 @@ export function TeamPanel({
                 onRemove={(member) => {
                   setError("");
                   setRemoving(member);
+                  setRemoveOpen(true);
                 }}
                 onRoleChange={updateMemberRole}
               />
@@ -293,9 +295,9 @@ export function TeamPanel({
         aria-describedby="remove-member-description"
         onCancel={(event) => {
           if (busy) event.preventDefault();
-          else setRemoving(null);
+          else setRemoveOpen(false);
         }}
-        onClose={() => setRemoving(null)}
+        onClose={() => setRemoveOpen(false)}
       >
         {removing && (
           <div className="auth-card">
@@ -319,7 +321,7 @@ export function TeamPanel({
                 className="button secondary"
                 autoFocus
                 disabled={busy}
-                onClick={() => setRemoving(null)}
+                onClick={() => setRemoveOpen(false)}
               >
                 Cancel
               </button>
@@ -331,7 +333,7 @@ export function TeamPanel({
                   void run(async () => {
                     const next = await removeTeamMember(removing.user_id);
                     onChange(next);
-                    setRemoving(null);
+                    setRemoveOpen(false);
                     setNotice("Member removed. Team access revoked.");
                   })
                 }

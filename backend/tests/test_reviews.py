@@ -32,7 +32,9 @@ def test_v1_integrity_and_human_staging_preserve_original():
         human = certificates.stage_human_certificate(
             None, original, uuid4(), uuid4(), False, datetime.now(UTC)
         )
-    persist.assert_called_once_with(None, human, register=False)
+    persist.assert_called_once_with(
+        None, human, register=False, image_bytes=None, reviewer_name=None
+    )
     assert original.model_dump_json() == before
     assert human.schema_version == 2
     assert human.original_certificate_id == original.certificate_id

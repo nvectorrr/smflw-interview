@@ -65,10 +65,13 @@ export function Footer() {
               <p>
                 Certificate verification links are public: anyone with a link
                 can view its evidence and download the certificate. Public
-                records exclude your account email and owner ID. Signed PDF
-                download links expire after five minutes; the verification link
-                itself remains usable while the certificate exists. Share links
-                only with people you intend to give access to.
+                records exclude your account email and owner ID. PDFs include a
+                small preview of the submitted image and, after human review,
+                the reviewer's display name and a fictional missionhotdog.com
+                office address. Signed PDF download links expire after five
+                minutes; the verification link itself remains usable while the
+                certificate exists. Share links only with people you intend to
+                give access to.
               </p>
             </section>
 
@@ -79,8 +82,8 @@ export function Footer() {
                 one-day expiry rule. Storage cleanup is asynchronous, so this is
                 not an exact 24-hour deletion deadline. Images copied for human
                 review are retained until a decision or account deletion. Check
-                history, usage records and certificates remain until account
-                deletion.
+                history, usage records, certificate previews and certificates
+                remain until account deletion.
               </p>
             </section>
 

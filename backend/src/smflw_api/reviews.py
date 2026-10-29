@@ -215,10 +215,29 @@ def decide_review(
             raise HTTPException(
                 409, "The original evidence failed its integrity check."
             )
+        repository.assert_user_active(settings, user_id)
         reviewed_at = datetime.now(UTC)
         stage_human_certificate(
-            settings, original, review_id, certificate_id, is_hot_dog, reviewed_at
+            settings,
+            original,
+            review_id,
+            certificate_id,
+            is_hot_dog,
+            reviewed_at,
+            image_bytes=data,
+            reviewer_name=repository._rpc(
+                settings, "hdn_review_name", {"p_user_id": str(user_id)}
+            )
+            or "Team member",
         )
+        try:
+            repository.assert_user_active(settings, user_id)
+        except HTTPException:
+            prefix = f"certificates/{owner_id}/{certificate_id}"
+            _delete_assets(
+                settings, [f"{prefix}.json", f"{prefix}.pdf", f"{prefix}.preview.jpg"]
+            )
+            raise
         result = repository._rpc(
             settings,
             "hdn_complete_review",
@@ -233,7 +252,9 @@ def decide_review(
         )
         if result.get("error"):
             prefix = f"certificates/{owner_id}/{certificate_id}"
-            _delete_assets(settings, [f"{prefix}.json", f"{prefix}.pdf"])
+            _delete_assets(
+                settings, [f"{prefix}.json", f"{prefix}.pdf", f"{prefix}.preview.jpg"]
+            )
         completed = _result(result)
     except (BotoCoreError, ClientError) as exc:
         raise HTTPException(

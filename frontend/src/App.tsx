@@ -45,7 +45,34 @@ function HotDogApp() {
       </header>
 
       {workspaceLoading ? (
-        <LoadingState label="Preparing your workspace…" />
+        <>
+          <div className="app-tabs navigation-skeleton" aria-hidden="true">
+            {[64, 90, 82, 42].map((width) => (
+              <span key={width} style={{ width }} />
+            ))}
+          </div>
+          {tab === "detect" ? (
+            <Classifier
+              active
+              classifier={classifier}
+              teamId={null}
+              onActivityChanged={refreshActivity}
+              loading
+            />
+          ) : (
+            <div className="workspace-bootstrap">
+              <div className="bootstrap-heading" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </div>
+              <LoadingState
+                records={tab === "activity"}
+                label="Preparing your workspace…"
+              />
+            </div>
+          )}
+        </>
       ) : workspaceError ? (
         <EmptyState
           kind="team"

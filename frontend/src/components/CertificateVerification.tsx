@@ -3,6 +3,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { Spinner } from "./WorkspaceState";
 import { useEffect, useRef, useState } from "react";
 import "../certificates.css";
+import "../verification-layout.css";
 import { CertificateDownload } from "./CertificatePanel";
 import { modelLabel } from "../lib/api";
 
@@ -183,179 +184,208 @@ export function CertificateVerification({
           <ThemeToggle />
         </div>
       </header>
-      <section className="intro">
-        <p className="eyebrow">RECORDED. VERIFIED.</p>
-        <h1>
-          Certificate <em>verification.</em>
-        </h1>
-        <p className="subtitle">
-          The recorded verdict and your photo’s digital fingerprint.
-        </p>
-      </section>
-      <section
-        className={`certificate-verification-card ${record ? "is-verified" : ""}`}
-        aria-busy={state.kind === "loading"}
-      >
-        <div role="status" aria-live="polite">
-          {state.kind === "loading" ? (
-            <span className="verification-spinner">
-              <Spinner />
-            </span>
-          ) : (
-            <span
-              className="certificate-verification-symbol"
-              aria-hidden="true"
-            >
-              {record ? "✓" : "?"}
-            </span>
-          )}
-          <h2>{title}</h2>
-          <p>
-            {record
-              ? "The record was found and its stored data integrity is confirmed."
-              : state.kind === "missing"
-                ? "There is no certificate with this identifier."
-                : state.kind === "invalid"
-                  ? "The identifier or certificate data could not be verified."
-                  : state.kind === "error"
-                    ? "The service is temporarily unavailable. Please refresh the page shortly."
-                    : "Matching this identifier against the stored certificate."}
+      <div className="verification-workspace">
+        <section className="intro">
+          <p className="eyebrow">04 / CERTIFICATE REGISTRY</p>
+          <h1>Certificate verification</h1>
+          <p className="subtitle">
+            The recorded verdict and your photo’s digital fingerprint.
           </p>
-        </div>
-        {record && (
-          <>
-            <div className="certificate-verified-verdict">
-              <span>
-                {human ? "FINAL HUMAN VERDICT" : "ORIGINAL AI VERDICT"}
+        </section>
+        <section
+          className={`certificate-verification-card ${record ? "is-verified" : ""}`}
+          aria-busy={state.kind === "loading"}
+        >
+          <div className="verification-status" role="status" aria-live="polite">
+            {state.kind === "loading" ? (
+              <span className="verification-spinner">
+                <Spinner />
               </span>
-              <strong>{record.is_hot_dog ? "Hot dog." : "Not hot dog."}</strong>
-              <code>is_hot_dog = {String(record.is_hot_dog)}</code>
-            </div>
-            <dl className="certificate-evidence">
-              <div>
-                <dt>Certificate</dt>
-                <dd>
-                  <code>{record.certificate_id}</code>
-                </dd>
-              </div>
-              <div>
-                <dt>Issued (UTC)</dt>
-                <dd>
-                  {new Date(record.issued_at)
-                    .toISOString()
-                    .replace("T", " ")
-                    .replace("Z", " UTC")}
-                </dd>
-              </div>
-              <div>
-                <dt>{human ? "Human reviewer" : "Inspector"}</dt>
-                <dd>
-                  {human
-                    ? record.reviewer_name || "Authorized team supervisor"
-                    : modelLabel(record.classifier_model)}
-                </dd>
-              </div>
-              {human && (
-                <>
-                  <div>
-                    <dt>Original AI certificate</dt>
-                    <dd>
-                      <code>{record.original_certificate_id}</code>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Review</dt>
-                    <dd>
-                      <code>{record.review_id}</code>
-                    </dd>
-                  </div>
-                </>
-              )}
-              <div>
-                <dt>Original photo SHA-256</dt>
-                <dd>
-                  <code>{record.image_sha256}</code>
-                </dd>
-              </div>
-            </dl>
-            <p className="certificate-verification-note">
-              Compare your file’s SHA-256 with the value above. A match confirms
-              that the verdict belongs to this photo.{" "}
-              {human
-                ? record.human_statement ||
-                  "A human team reviewer made this final decision. The original AI verdict is preserved in its own certificate."
-                : "AI results can be incorrect."}
-            </p>
-            <div className="certificate-file-check">
-              <label id="compare-file-label" htmlFor="certificate-compare-file">
-                Compare with your file
-              </label>
+            ) : (
+              <span
+                className="certificate-verification-symbol"
+                aria-hidden="true"
+              >
+                {record ? "✓" : "?"}
+              </span>
+            )}
+            <div className="verification-status-copy">
+              <h2>{title}</h2>
               <p>
-                The SHA-256 is calculated in your browser. Your file stays on
-                your device.
+                {record
+                  ? "The record was found and its stored data integrity is confirmed."
+                  : state.kind === "missing"
+                    ? "There is no certificate with this identifier."
+                    : state.kind === "invalid"
+                      ? "The identifier or certificate data could not be verified."
+                      : state.kind === "error"
+                        ? "The service is temporarily unavailable. Please refresh the page shortly."
+                        : "Matching this identifier against the stored certificate."}
               </p>
-              <div className="compare-file-control">
-                <button
-                  className="activity-refresh"
-                  type="button"
-                  disabled={fileCheck?.status === "checking"}
-                  onClick={() => fileInput.current?.click()}
-                >
-                  Choose image
-                </button>
-                <span className="compare-file-name" title={fileCheck?.name}>
-                  {fileCheck?.name || "No file selected"}
-                </span>
-              </div>
-              <input
-                ref={fileInput}
-                hidden
-                aria-labelledby="compare-file-label"
-                id="certificate-compare-file"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                disabled={fileCheck?.status === "checking"}
-                onChange={(event) => {
-                  void compareFile(event.target.files?.[0]);
-                  event.target.value = "";
-                }}
-              />
-              {fileCheck && (
-                <p
-                  className={`certificate-file-result ${fileCheck.status}`}
-                  role="status"
-                >
-                  {fileCheck.status === "checking" ? (
-                    <>
-                      <Spinner /> Calculating fingerprint…
-                    </>
-                  ) : fileCheck.status === "match" ? (
-                    "Match: this certificate belongs to your file."
-                  ) : fileCheck.status === "mismatch" ? (
-                    "The fingerprint differs. This is a different file or an edited copy."
-                  ) : (
-                    "Could not read the file. Choose an image up to 5 MB; fingerprint comparison requires a secure connection."
-                  )}
-                </p>
-              )}
             </div>
-            <CertificateDownload certificateId={certificateId}>
-              Download PDF ↓
-            </CertificateDownload>
-          </>
-        )}
-        {state.kind === "error" && (
-          <button
-            className="activity-refresh"
-            onClick={() => window.location.reload()}
-          >
-            Try again ↻
-          </button>
-        )}
-        <a className="certificate-record-link" href="/">
-          Check a new photo ↗
-        </a>
-      </section>
+          </div>
+          {state.kind === "loading" && (
+            <div className="verification-loading" aria-hidden="true">
+              <div className="skeleton-layout">
+                <div className="skeleton-records">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <div key={i}>
+                      <i />
+                      <i />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="skeleton-fill" />
+            </div>
+          )}
+          {record && (
+            <div className="verification-record-layout">
+              <div className="verification-evidence">
+                <dl className="certificate-evidence">
+                  <div>
+                    <dt>Certificate</dt>
+                    <dd>
+                      <code>{record.certificate_id}</code>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Issued (UTC)</dt>
+                    <dd>
+                      {new Date(record.issued_at)
+                        .toISOString()
+                        .replace("T", " ")
+                        .replace("Z", " UTC")}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>{human ? "Human reviewer" : "Inspector"}</dt>
+                    <dd>
+                      {human
+                        ? record.reviewer_name || "Authorized team supervisor"
+                        : modelLabel(record.classifier_model)}
+                    </dd>
+                  </div>
+                  {human && (
+                    <>
+                      <div>
+                        <dt>Original AI certificate</dt>
+                        <dd>
+                          <code>{record.original_certificate_id}</code>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Review</dt>
+                        <dd>
+                          <code>{record.review_id}</code>
+                        </dd>
+                      </div>
+                    </>
+                  )}
+                  <div>
+                    <dt>Original photo SHA-256</dt>
+                    <dd>
+                      <code>{record.image_sha256}</code>
+                    </dd>
+                  </div>
+                </dl>
+                <p className="certificate-verification-note">
+                  Compare your file’s SHA-256 with the value above. A match
+                  confirms that the verdict belongs to this photo.{" "}
+                  {human
+                    ? record.human_statement ||
+                      "A human team reviewer made this final decision. The original AI verdict is preserved in its own certificate."
+                    : "The original AI determination is preserved in the certificate."}
+                </p>
+              </div>
+              <aside
+                className="verification-actions"
+                aria-label="Verdict and document actions"
+              >
+                <div className="certificate-verified-verdict">
+                  <span>
+                    {human ? "FINAL HUMAN VERDICT" : "ORIGINAL AI VERDICT"}
+                  </span>
+                  <strong>
+                    {record.is_hot_dog ? "Hot dog." : "Not hot dog."}
+                  </strong>
+                  <code>is_hot_dog = {String(record.is_hot_dog)}</code>
+                </div>
+                <div className="certificate-file-check">
+                  <label
+                    id="compare-file-label"
+                    htmlFor="certificate-compare-file"
+                  >
+                    Compare with your file
+                  </label>
+                  <p>
+                    The SHA-256 is calculated in your browser. Your file stays
+                    on your device.
+                  </p>
+                  <div className="compare-file-control">
+                    <button
+                      className="activity-refresh"
+                      type="button"
+                      disabled={fileCheck?.status === "checking"}
+                      onClick={() => fileInput.current?.click()}
+                    >
+                      Choose image
+                    </button>
+                    <span className="compare-file-name" title={fileCheck?.name}>
+                      {fileCheck?.name || "No file selected"}
+                    </span>
+                  </div>
+                  <input
+                    ref={fileInput}
+                    hidden
+                    aria-labelledby="compare-file-label"
+                    id="certificate-compare-file"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    disabled={fileCheck?.status === "checking"}
+                    onChange={(event) => {
+                      void compareFile(event.target.files?.[0]);
+                      event.target.value = "";
+                    }}
+                  />
+                  {fileCheck && (
+                    <p
+                      className={`certificate-file-result ${fileCheck.status}`}
+                      role="status"
+                    >
+                      {fileCheck.status === "checking" ? (
+                        <>
+                          <Spinner /> Calculating fingerprint…
+                        </>
+                      ) : fileCheck.status === "match" ? (
+                        "Match: this certificate belongs to your file."
+                      ) : fileCheck.status === "mismatch" ? (
+                        "The fingerprint differs. This is a different file or an edited copy."
+                      ) : (
+                        "Could not read the file. Choose an image up to 5 MB; fingerprint comparison requires a secure connection."
+                      )}
+                    </p>
+                  )}
+                </div>
+                <CertificateDownload certificateId={certificateId}>
+                  Download PDF ↓
+                </CertificateDownload>
+              </aside>
+            </div>
+          )}
+          {state.kind === "error" && (
+            <button
+              className="activity-refresh"
+              onClick={() => window.location.reload()}
+            >
+              Try again ↻
+            </button>
+          )}
+          <a className="certificate-record-link" href="/">
+            Check a new photo ↗
+          </a>
+        </section>
+      </div>
       <Footer />
     </main>
   );

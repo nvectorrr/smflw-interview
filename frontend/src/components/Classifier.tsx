@@ -8,6 +8,7 @@ import { ModelSelector } from "./ModelSelector";
 
 type ClassifierProps = {
   active: boolean;
+  loading?: boolean;
   classifier: ReturnType<typeof useClassifier>;
   teamId: string | null;
   onActivityChanged: () => void;
@@ -15,6 +16,7 @@ type ClassifierProps = {
 
 export function Classifier({
   active,
+  loading = false,
   classifier,
   teamId,
   onActivityChanged,
@@ -34,7 +36,11 @@ export function Classifier({
     classify,
   } = classifier;
   return (
-    <div className="classifier-content" hidden={!active}>
+    <div
+      className={`classifier-content ${loading ? "classifier-loading" : ""}`}
+      hidden={!active}
+      aria-busy={loading || busy}
+    >
       <section className="intro" aria-labelledby="title">
         <p className="eyebrow">00 / IMAGE CLASSIFICATION</p>
         <h1 id="title">Hot dog or not?</h1>
@@ -43,7 +49,17 @@ export function Classifier({
         </p>
       </section>
 
-      <section className="workbench" aria-label="Photo check" aria-busy={busy}>
+      {loading && (
+        <span className="sr-only" role="status">
+          Preparing your workspace…
+        </span>
+      )}
+      <section
+        className="workbench"
+        aria-label="Photo check"
+        aria-busy={loading || busy}
+        inert={loading || undefined}
+      >
         <PhotoSource {...classifier} />
 
         <div

@@ -8,11 +8,35 @@ export function LoadingState({
   label,
   compact = false,
   records = false,
+  review = false,
 }: {
   label: string;
   compact?: boolean;
   records?: boolean;
+  review?: boolean;
 }) {
+  if (review)
+    return (
+      <div className="review-skeleton" role="status">
+        <span className="sr-only">{label}</span>
+        <div className="review-skeleton-controls" aria-hidden="true">
+          <i />
+          <i />
+        </div>
+        <div className="review-card" aria-hidden="true">
+          <div className="review-photo skeleton-fill" />
+          <div className="review-card-body skeleton-panel">
+            <aside>
+              <i />
+              <i />
+              <i />
+              <i />
+              <b />
+            </aside>
+          </div>
+        </div>
+      </div>
+    );
   return (
     <div className={`loading-state ${compact ? "compact" : ""}`} role="status">
       <div className="loading-caption">

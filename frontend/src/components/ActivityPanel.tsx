@@ -7,7 +7,7 @@ import type {
   ActivityFilters,
 } from "../lib/api";
 
-import { EmptyState, LoadingState } from "./WorkspaceState";
+import { EmptyState, LoadingState, Spinner } from "./WorkspaceState";
 import { ActivityFiltersBar } from "./activity/ActivityFiltersBar";
 import { ActivityStats } from "./activity/ActivityStats";
 import { ActivityRecords } from "./activity/ActivityRecords";
@@ -69,8 +69,6 @@ export function ActivityPanel({
       })
       .catch((cause) => {
         if (current) {
-          setPage(null);
-          setStats(null);
           setError(
             cause instanceof Error && cause.name !== "AbortError"
               ? cause.message
@@ -118,7 +116,15 @@ export function ActivityPanel({
           disabled={loading}
           onClick={() => setRetry((value) => value + 1)}
         >
-          Refresh ↻
+          {loading ? (
+            <>
+              <Spinner /> Updating…
+            </>
+          ) : error ? (
+            "Try again ↻"
+          ) : (
+            "Refresh ↻"
+          )}
         </button>
       </div>
       <ActivityFiltersBar
@@ -129,30 +135,21 @@ export function ActivityPanel({
         onReset={resetFilters}
       />
       <div role={error ? "alert" : undefined}>
-        {error && (
-          <EmptyState title="Records unavailable" description={error}>
-            <button
-              className="activity-refresh"
-              onClick={() => setRetry((value) => value + 1)}
-            >
-              Try again ↻
-            </button>
-          </EmptyState>
-        )}
+        {error &&
+          (page ? (
+            <p className="error">{error}</p>
+          ) : (
+            <EmptyState title="Records unavailable" description={error} />
+          ))}
       </div>
-      {loading && (
-        <LoadingState
-          records
-          label={page ? "Updating records…" : "Loading activity…"}
-          compact={!!page}
-        />
-      )}
+      {loading && !page && <LoadingState records label="Loading activity…" />}
       {stats && <ActivityStats stats={stats} />}
       {page && page.items.length > 0 ? (
         <ActivityRecords
+          active={active}
           page={page}
           loading={loading}
-          offset={offset}
+          offset={page.offset}
           selectedId={selectedId}
           teamView={teamView}
           team={team}
@@ -176,11 +173,7 @@ export function ActivityPanel({
                 : "Classify an image to start a record of results, certificates and human reviews."
             }
           >
-            {Object.values(filters).some(Boolean) ? (
-              <button className="activity-refresh" onClick={resetFilters}>
-                Clear filters
-              </button>
-            ) : (
+            {!Object.values(filters).some(Boolean) && (
               <button className="activity-refresh" onClick={onClassify}>
                 Classify an image ↗
               </button>

@@ -116,30 +116,32 @@ export function PhotoSource({
       <div className="file-meta">
         <span id="file-help">JPG, PNG, WebP · up to 5 MB</span>
       </div>
-      {file && (
-        <dl className="source-metadata" aria-label="Image metadata">
-          <div className="source-filename">
-            <dt>File</dt>
-            <dd title={file.name}>{file.name}</dd>
-          </div>
-          <div>
-            <dt>Format</dt>
-            <dd>{file.type.replace("image/", "").toUpperCase()}</dd>
-          </div>
-          <div>
-            <dt>Size</dt>
-            <dd>
-              {file.size < 1024 * 1024
-                ? `${Math.max(1, Math.round(file.size / 1024))} KB`
-                : `${(file.size / (1024 * 1024)).toFixed(2)} MB`}
-            </dd>
-          </div>
-          <div>
-            <dt>Dimensions</dt>
-            <dd>{dimensions ?? "Reading…"}</dd>
-          </div>
-        </dl>
-      )}
+      <div className="source-meta-slot">
+        {file && (
+          <dl className="source-metadata" aria-label="Image metadata">
+            <div className="source-filename">
+              <dt>File</dt>
+              <dd title={file.name}>{file.name}</dd>
+            </div>
+            <div>
+              <dt>Format</dt>
+              <dd>{file.type.replace("image/", "").toUpperCase()}</dd>
+            </div>
+            <div>
+              <dt>Size</dt>
+              <dd>
+                {file.size < 1024 * 1024
+                  ? `${Math.max(1, Math.round(file.size / 1024))} KB`
+                  : `${(file.size / (1024 * 1024)).toFixed(2)} MB`}
+              </dd>
+            </div>
+            <div>
+              <dt>Dimensions</dt>
+              <dd>{dimensions ?? "Reading…"}</dd>
+            </div>
+          </dl>
+        )}
+      </div>
     </div>
   );
 }
